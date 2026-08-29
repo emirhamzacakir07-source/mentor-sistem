@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Yönetici Paneli - Mentörlük Programı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
+        body { background-color: #f4f6f9; color: #333; padding: 20px; }
+        .container { max-width: 1300px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eaeaea; padding-bottom: 15px; margin-bottom: 25px; }
+        header h1 { color: #2c3e50; font-size: 24px; }
+        .nav-links a { text-decoration: none; color: #007bff; margin-left: 15px; }
+        .grid-section { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px; }
+        .card { background: #fafbfc; border: 1px solid #e1e4e8; border-radius: 8px; padding: 20px; }
+        .card h2 { font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { background-color: #007bff; color: white; }
+        form { display: flex; flex-direction: column; gap: 12px; }
+        label { font-weight: 700; font-size: 13px; color: #555; }
+        input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 100%; }
+        button { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        .secenekler-alani { display: none; background: #eef2f5; padding: 15px; border-radius: 6px; border: 1px dashed #adb5bd; }
+        .secenekler-alani.aktif { display: flex; flex-direction: column; gap: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Mentörlük Sistemi - Admin Paneli</h1>
+        <div class="nav-links"><a href="/">Ana Sayfa</a><a href="/logout">Çıkış Yap</a></div>
+    </header>
+
+    <div class="grid-section">
+        <!-- SORU EKLEME KARTI -->
+        <div class="card" style="border-top: 4px solid #007bff;">
+            <h2><i class="fas fa-question-circle"></i> Soru Ekle</h2>
+            <form action="/add-question" method="POST">
+                <input type="hidden" name="isTask" value="false">
+                <div style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label>Soru Türü:</label>
+                        <select name="type" id="soruTuruSecimi" onchange="turKontrolEt()" required>
+                            <option value="KLASIK">Klasik (Açık Uçlu) Soru</option>
+                            <option value="COKTAN_SECMELI">Çoktan Seçmeli (Şıklı) Soru</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;"><label>Ders Kategorisi:</label><input type="text" name="category" required></div>
+                    <div style="flex: 1;"><label>Maksimum Puan:</label><input type="number" name="maxPoints" required></div>
+                </div>
+                <label>Soru Metni:</label>
+                <textarea name="content" rows="3" required></textarea>
+                <div id="siklarAlani" class="secenekler-alani">
+                    <label style="color:#007bff;">Şıkları Giriniz:</label>
+                    <input type="text" name="optionA" placeholder="A Şıkkı">
+                    <input type="text" name="optionB" placeholder="B Şıkkı">
+                    <input type="text" name="optionC" placeholder="C Şıkkı">
+                    <input type="text" name="optionD" placeholder="D Şıkkı">
+                </div>
+                <button type="submit">Soruyu Sisteme Kaydet</button>
+            </form>
+        </div>
+
+        <!-- VAZİFE EKLEME KARTI -->
+        <div class="card" style="border-top: 4px solid #ff9800;">
+            <h2><i class="fas fa-tasks"></i> Vazife / Görev Ekle</h2>
+            <form action="/add-question" method="POST">
+                <input type="hidden" name="isTask" value="true">
+                <input type="hidden" name="type" value="VAZIFE">
+                <input type="hidden" name="category" value="Genel">
+                <label>Görev Puanı:</label>
+                <input type="number" name="maxPoints" required>
+                <label>Vazife Tanımı:</label>
+                <textarea name="content" rows="4" required></textarea>
+                <button type="submit" style="background-color: #ff9800;">Vazifeyi Gönder</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    function turKontrolEt() {
+        var secim = document.getElementById("soruTuruSecimi").value;
+        var siklarAlani = document.getElementById("siklarAlani");
+        if (secim === "COKTAN_SECMELI") { siklarAlani.classList.add("aktif"); } else { siklarAlani.classList.remove("aktif"); }
+    }
+</script>
+</body>
+</html>

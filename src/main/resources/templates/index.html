@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş - Mentörlük Programı</title>
+
+    <!-- Google Fonts ve İkonlar -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            overflow-x: hidden;
+            color: #fff;
+        }
+
+        .arkaplan-resmi {
+            position: fixed;
+            top: -5%;
+            left: -5%;
+            width: 110%;
+            height: 110%;
+            background-image: url('https://i.ibb.co/hF8nsNcF/Whats-App-mage-2026-08-28-at-20-10-26.jpg');
+            background-size: cover;
+            background-position: center;
+            filter: blur(12px) brightness(0.6);
+            z-index: -1;
+        }
+
+        .baslik-yazisi {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-shadow: 3px 5px 15px rgba(0, 0, 0, 0.9);
+            margin-top: 30px;
+            margin-bottom: 5px;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .alt-baslik {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #00d2ff;
+            margin-bottom: 40px;
+            text-shadow: 1px 2px 5px rgba(0,0,0,0.8);
+            z-index: 1;
+        }
+
+        .ana-duzen {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 30px;
+            width: 95%;
+            max-width: 1300px;
+            z-index: 1;
+            margin-bottom: 50px;
+            flex-wrap: wrap;
+        }
+
+        .bilgi-paneli {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex: 1;
+            min-width: 280px;
+            max-width: 350px;
+        }
+
+        .bilgi-karti {
+            background: rgba(15, 20, 35, 0.75);
+            backdrop-filter: blur(8px);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .bilgi-karti h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.2rem;
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .bilgi-karti ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .bilgi-karti li {
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Neon Renk Temaları */
+        .neon-mavi { border-top: 4px solid #00d2ff; box-shadow: 0 -5px 15px rgba(0, 210, 255, 0.2), 0 10px 25px rgba(0, 0, 0, 0.5); }
+        .neon-mavi h3, .neon-mavi i { color: #00d2ff; }
+
+        .neon-pembe { border-top: 4px solid #ff007f; box-shadow: 0 -5px 15px rgba(255, 0, 127, 0.2), 0 10px 25px rgba(0, 0, 0, 0.5); }
+        .neon-pembe h3, .neon-pembe i { color: #ff007f; }
+
+        .neon-yesil { border-top: 4px solid #00e676; box-shadow: 0 -5px 15px rgba(0, 230, 118, 0.2), 0 10px 25px rgba(0, 0, 0, 0.5); }
+        .neon-yesil h3, .neon-yesil i { color: #00e676; }
+
+        /* YENİ: Turuncu/Altın Neon Tema */
+        .neon-turuncu { border-top: 4px solid #ff9800; box-shadow: 0 -5px 15px rgba(255, 152, 0, 0.2), 0 10px 25px rgba(0, 0, 0, 0.5); }
+        .neon-turuncu h3, .neon-turuncu i { color: #ff9800; }
+
+        .giris-kutusu {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0px 15px 40px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            flex: 1;
+            min-width: 320px;
+            max-width: 420px;
+            color: #333;
+        }
+
+        .ortadaki-foto {
+            width: 100%;
+            max-width: 320px;
+            height: auto;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            border: 3px solid #eee;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        input {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 12px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .alt-linkler {
+            margin-top: 20px;
+            font-size: 0.95rem;
+        }
+
+        .alt-linkler a {
+            color: #007BFF;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: bold;
+        }
+
+        .alt-linkler a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="arkaplan-resmi"></div>
+
+<h1 class="baslik-yazisi">ORTAOKUL MENTÖRLÜK PROGRAMI</h1>
+<div class="alt-baslik">Hayat Boyu Rehberlik, Sonsuz Potansiyel</div>
+
+<div class="ana-duzen">
+
+    <!-- SOL PANEL: Haftalık Hedefler & Özel Rehberlik -->
+    <div class="bilgi-paneli">
+        <div class="bilgi-karti neon-mavi">
+            <h3><i class="fas fa-bullseye"></i> HAFTALIK HEDEFLER</h3>
+            <ul>
+                <li><i class="fas fa-check-circle"></i> Zaman Yönetimi Planlama</li>
+                <li><i class="fas fa-check-circle"></i> Başarı Takibi</li>
+                <li><i class="fas fa-check-circle"></i> Motivasyon Artırma</li>
+                <li><i class="fas fa-check-circle"></i> Adım Adım İlerleme</li>
+            </ul>
+        </div>
+
+        <!-- YENİ EKLENEN KART -->
+        <div class="bilgi-karti neon-turuncu">
+            <h3><i class="fas fa-star"></i> ÖZEL REHBERLİK</h3>
+            <ul>
+                <li><i class="fas fa-user-graduate"></i> 5, 6, 7 ve 8. Sınıflar İçin</li>
+                <li><i class="fas fa-chalkboard-teacher"></i> Birebir Özel İlgilenme</li>
+                <li><i class="fas fa-chart-line"></i> Düzenli Gelişim Takibi</li>
+                <li><i class="fas fa-gift"></i> Sürpriz ve Çeşitli Ödüller</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ORTA PANEL: Giriş Formu -->
+    <div class="giris-kutusu">
+        <img src="https://i.ibb.co/hF8nsNcF/Whats-App-mage-2026-08-28-at-20-10-26.jpg" alt="Mentörlük Programı" class="ortadaki-foto">
+
+        <div th:if="${error != null}" style="color: #dc3545; background-color: #f8d7da; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-weight: bold;" th:text="${error}"></div>
+        <div th:if="${param.success != null}" style="color: #28a745; background-color: #d4edda; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-weight: bold;">Kayıt başarılı! Lütfen giriş yapın.</div>
+
+        <form action="/login" method="POST">
+            <input type="text" name="username" placeholder="Kullanıcı Adı" required>
+            <input type="password" name="password" placeholder="Şifre" required>
+            <button type="submit">Giriş Yap</button>
+        </form>
+
+        <div class="alt-linkler">
+            <a href="/register">Kayıt Ol</a> |
+            <a href="/forgot-password">Şifremi Unuttum</a>
+        </div>
+    </div>
+
+    <!-- SAĞ PANEL: Değerler Sohbeti ve Dersler -->
+    <div class="bilgi-paneli">
+        <div class="bilgi-karti neon-pembe">
+            <h3><i class="fas fa-comments"></i> DEĞERLER SOHBETİ</h3>
+            <ul>
+                <li><i class="fas fa-heart"></i> Saygı ve Dürüstlük</li>
+                <li><i class="fas fa-heart"></i> Empati ve İşbirliği</li>
+                <li><i class="fas fa-heart"></i> Paylaşım ve Dostluk</li>
+                <li><i class="fas fa-heart"></i> Karakter Gelişimi</li>
+            </ul>
+        </div>
+
+        <div class="bilgi-karti neon-yesil">
+            <h3><i class="fas fa-book-open"></i> DERSLER ÜZERİNE</h3>
+            <ul>
+                <li><i class="fas fa-graduation-cap"></i> Akademik Başarı Stratejileri</li>
+                <li><i class="fas fa-graduation-cap"></i> Sınav Hazırlık İpuçları</li>
+                <li><i class="fas fa-graduation-cap"></i> Etkili Çalışma Teknikleri</li>
+                <li><i class="fas fa-graduation-cap"></i> Gelecek Planlama</li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
