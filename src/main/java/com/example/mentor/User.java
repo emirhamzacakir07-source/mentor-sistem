@@ -23,9 +23,14 @@ public class User {
     private String gradeClass;
 
     private String role; // ADMIN, STUDENT veya MENTOR olacak
+    private String category; // Mentör uzmanlık alanı
 
-    // YENİ EKLENDİ: Mentörlerin uzmanlık alanını (Örn: Java, Ekonomi) tutmak için
-    private String category;
+    // --- YENİ: MENTÖR KAYIT VE ONAY SİSTEMİ İÇİN ---
+    private String region; // Mentörün bölgesi (Meram, Selçuklu vb.)
+    private boolean isApproved; // Admin onayladı mı? (Öğrenciler otomatik true olacak, Mentörler false başlayacak)
+
+    // Bir öğrencinin hangi mentöre atandığını tutar. (Mentörlerde boş kalır)
+    private Long assignedMentorId;
 
     private LocalDateTime lastLoginDate;
     private boolean inactiveWarningSent;
@@ -65,9 +70,18 @@ public class User {
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
-    // Kategori için Getter ve Setter
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
+
+    public Long getAssignedMentorId() { return assignedMentorId; }
+    public void setAssignedMentorId(Long assignedMentorId) { this.assignedMentorId = assignedMentorId; }
+
+    // --- YENİ EKLENENLERİN GETTER / SETTER'LARI ---
+    public String getRegion() { return region; }
+    public void setRegion(String region) { this.region = region; }
+
+    public boolean isApproved() { return isApproved; }
+    public void setApproved(boolean approved) { isApproved = approved; }
 
     public LocalDateTime getLastLoginDate() { return lastLoginDate; }
     public void setLastLoginDate(LocalDateTime lastLoginDate) { this.lastLoginDate = lastLoginDate; }

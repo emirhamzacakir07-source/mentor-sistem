@@ -2,88 +2,341 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Yönetici Paneli - Mentörlük Programı</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yönetici Paneli - Liderlik & Mentörlük Akademisi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* GENEL AYARLAR */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
-        body { background-color: #f4f6f9; color: #333; padding: 20px; }
-        .container { max-width: 1300px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); }
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eaeaea; padding-bottom: 15px; margin-bottom: 25px; }
-        header h1 { color: #2c3e50; font-size: 24px; }
-        .nav-links a { text-decoration: none; color: #007bff; margin-left: 15px; }
-        .grid-section { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px; }
-        .card { background: #fafbfc; border: 1px solid #e1e4e8; border-radius: 8px; padding: 20px; }
-        .card h2 { font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
-        th { background-color: #007bff; color: white; }
-        form { display: flex; flex-direction: column; gap: 12px; }
-        label { font-weight: 700; font-size: 13px; color: #555; }
-        input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 100%; }
-        button { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; }
-        .secenekler-alani { display: none; background: #eef2f5; padding: 15px; border-radius: 6px; border: 1px dashed #adb5bd; }
-        .secenekler-alani.aktif { display: flex; flex-direction: column; gap: 10px; }
+        body { display: flex; height: 100vh; background-color: #f4f7fa; color: #334155; overflow: hidden; }
+
+        /* SOL MENÜ (SIDEBAR) */
+        .sidebar { width: 280px; background-color: #1e293b; color: #f8fafc; display: flex; flex-direction: column; transition: 0.3s; }
+        .sidebar-header { padding: 25px 20px; font-size: 20px; font-weight: 700; color: #fff; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; }
+        .sidebar-menu { list-style: none; padding: 20px 0; flex: 1; overflow-y: auto; }
+        .sidebar-menu li { padding: 15px 25px; font-size: 15px; font-weight: 500; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; display: flex; align-items: center; gap: 15px; color: #cbd5e1; }
+        .sidebar-menu li:hover { background-color: #334155; color: #fff; border-left-color: #3b82f6; }
+        .sidebar-menu li.active { background-color: #0f172a; color: #3b82f6; border-left-color: #3b82f6; font-weight: 600; }
+        .sidebar-footer { padding: 20px; border-top: 1px solid #334155; }
+        .sidebar-footer a { color: #ef4444; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+
+        /* ANA İÇERİK ALANI (MAIN CONTENT) */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+
+        /* ÜST BAR (TOPBAR) */
+        .topbar { background: #ffffff; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; }
+        .topbar h2 { font-size: 22px; color: #0f172a; }
+        .admin-profile { display: flex; align-items: center; gap: 15px; font-weight: 600; }
+
+        /* DİNAMİK SEKMELER */
+        .content-section { display: none; padding: 30px; animation: fadeIn 0.4s ease; }
+        .content-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* KARTLAR VE IZGARA YAPISI */
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .card { background: #ffffff; border-radius: 10px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; margin-bottom: 25px; }
+        .card-header { font-size: 18px; font-weight: 600; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0; color: #1e293b; display: flex; align-items: center; gap: 10px; }
+
+        /* FORMLAR */
+        form { display: flex; flex-direction: column; gap: 15px; }
+        .form-row { display: flex; gap: 15px; }
+        .form-group { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        label { font-weight: 600; font-size: 13px; color: #64748b; }
+        input, select, textarea { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; transition: 0.2s; outline: none; }
+        input:focus, select:focus, textarea:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        button { padding: 12px 20px; font-weight: 600; background-color: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        button:hover { background-color: #2563eb; }
+        button.btn-warning { background-color: #f59e0b; } button.btn-warning:hover { background-color: #d97706; }
+        button.btn-danger { background-color: #ef4444; } button.btn-danger:hover { background-color: #dc2626; }
+
+        /* ŞIK VE PUAN TABLOSU */
+        .secenekler-alani { display: none; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px dashed #94a3b8; }
+        .secenekler-alani.aktif { display: flex; flex-direction: column; gap: 15px; }
+        .sik-satiri { display: flex; gap: 10px; align-items: center; }
+        .sik-satiri input[type="text"] { flex: 3; }
+        .sik-satiri input[type="number"] { flex: 1; }
+
+        /* TABLOLAR */
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+        .data-table th { background-color: #f1f5f9; color: #475569; font-weight: 600; }
+        .data-table tr:hover { background-color: #f8fafc; }
+
+        /* ETİKETLER (Badge) */
+        .badge { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .badge-admin { background: #fce7f3; color: #be185d; }
+        .badge-mentor { background: #dcfce7; color: #15803d; }
+        .badge-student { background: #e0e7ff; color: #4338ca; }
+        .badge-warning { background: #fef3c7; color: #d97706; }
     </style>
 </head>
 <body>
-<div class="container">
-    <header>
-        <h1>Mentörlük Sistemi - Admin Paneli</h1>
-        <div class="nav-links"><a href="/">Ana Sayfa</a><a href="/logout">Çıkış Yap</a></div>
+
+<!-- SOL MENÜ -->
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <i class="fas fa-graduation-cap"></i> MentörPanel Pro
+    </div>
+    <ul class="sidebar-menu">
+        <li class="active" onclick="degistirSekme('dashboard', this)"><i class="fas fa-chart-pie"></i> Genel Bakış</li>
+        <li onclick="degistirSekme('sorular', this)"><i class="fas fa-question-circle"></i> Soru & Vazife Havuzu</li>
+        <li onclick="degistirSekme('kullanicilar', this)"><i class="fas fa-users"></i> Öğrenci & Mentörler</li>
+        <li onclick="degistirSekme('atamalar', this)"><i class="fas fa-exchange-alt"></i> Mentör Atamaları</li>
+        <li onclick="degistirSekme('mesaj-log', this)"><i class="fas fa-search"></i> Sistem Mesaj Denetimi</li>
+        <li onclick="degistirSekme('bildirimler', this)"><i class="fas fa-bell"></i> Şifre Talepleri</li>
+    </ul>
+    <div class="sidebar-footer">
+        <a href="/logout"><i class="fas fa-sign-out-alt"></i> Sistemden Çıkış Yap</a>
+    </div>
+</aside>
+
+<!-- ANA İÇERİK -->
+<main class="main-content">
+    <!-- ÜST BAR -->
+    <header class="topbar">
+        <h2 id="sayfaBasligi">Genel Bakış</h2>
+        <div class="admin-profile">
+            <span th:text="${session.loggedInUsername}">Admin</span>
+            <i class="fas fa-user-shield" style="font-size: 24px; color: #3b82f6;"></i>
+        </div>
     </header>
 
-    <div class="grid-section">
-        <!-- SORU EKLEME KARTI -->
-        <div class="card" style="border-top: 4px solid #007bff;">
-            <h2><i class="fas fa-question-circle"></i> Soru Ekle</h2>
-            <form action="/add-question" method="POST">
-                <input type="hidden" name="isTask" value="false">
-                <div style="display: flex; gap: 15px;">
-                    <div style="flex: 1;">
-                        <label>Soru Türü:</label>
-                        <select name="type" id="soruTuruSecimi" onchange="turKontrolEt()" required>
-                            <option value="KLASIK">Klasik (Açık Uçlu) Soru</option>
-                            <option value="COKTAN_SECMELI">Çoktan Seçmeli (Şıklı) Soru</option>
-                        </select>
+    <!-- 1. SEKME: DASHBOARD -->
+    <section id="dashboard" class="content-section active">
+        <div class="grid-layout">
+            <div class="card" style="border-top: 4px solid #10b981;">
+                <div class="card-header"><i class="fas fa-info-circle"></i> Sistem Özeti</div>
+                <p>Sistem şu anda canlı! Veritabanındaki tüm kayıtlar aktif olarak sayfalara yansımaktadır. Sol menüyü kullanarak işlemlere başlayabilirsiniz.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. SEKME: SORU VE VAZİFE HAVUZU -->
+    <section id="sorular" class="content-section">
+        <div class="grid-layout">
+            <!-- SORU EKLEME -->
+            <div class="card" style="border-top: 4px solid #3b82f6;">
+                <div class="card-header"><i class="fas fa-pen-nib"></i> Detaylı Soru Ekle</div>
+                <form action="/add-question" method="POST">
+                    <input type="hidden" name="isTask" value="false">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Soru Türü:</label>
+                            <select name="type" id="soruTuruSecimi" onchange="turKontrolEt()" required>
+                                <option value="KLASIK">Klasik (Açık Uçlu)</option>
+                                <option value="COKTAN_SECMELI">Şıklı (Seçeneklere Özel Puanlı)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Kategori / Ders:</label>
+                            <input type="text" name="category" placeholder="Örn: Java, LGS Matematik" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Maks. Puan:</label>
+                            <input type="number" name="maxPoints" required>
+                        </div>
                     </div>
-                    <div style="flex: 1;"><label>Ders Kategorisi:</label><input type="text" name="category" required></div>
-                    <div style="flex: 1;"><label>Maksimum Puan:</label><input type="number" name="maxPoints" required></div>
-                </div>
-                <label>Soru Metni:</label>
-                <textarea name="content" rows="3" required></textarea>
-                <div id="siklarAlani" class="secenekler-alani">
-                    <label style="color:#007bff;">Şıkları Giriniz:</label>
-                    <input type="text" name="optionA" placeholder="A Şıkkı">
-                    <input type="text" name="optionB" placeholder="B Şıkkı">
-                    <input type="text" name="optionC" placeholder="C Şıkkı">
-                    <input type="text" name="optionD" placeholder="D Şıkkı">
-                </div>
-                <button type="submit">Soruyu Sisteme Kaydet</button>
-            </form>
+
+                    <label>Soru Metni:</label>
+                    <textarea name="content" rows="4" required></textarea>
+
+                    <!-- ŞIKLARA ÖZEL PUANLAMA ALANI -->
+                    <div id="siklarAlani" class="secenekler-alani">
+                        <label style="color:#0f172a; border-bottom:1px solid #ccc; padding-bottom:5px;">Şıkları ve Her Şıkkın Puan Değerini Giriniz:</label>
+
+                        <div class="sik-satiri"><span style="font-weight:bold;">A)</span><input type="text" name="optionA_text" placeholder="A şıkkı metni"><input type="number" name="optionA_point" placeholder="Puanı"></div>
+                        <div class="sik-satiri"><span style="font-weight:bold;">B)</span><input type="text" name="optionB_text" placeholder="B şıkkı metni"><input type="number" name="optionB_point" placeholder="Puanı"></div>
+                        <div class="sik-satiri"><span style="font-weight:bold;">C)</span><input type="text" name="optionC_text" placeholder="C şıkkı metni"><input type="number" name="optionC_point" placeholder="Puanı"></div>
+                        <div class="sik-satiri"><span style="font-weight:bold;">D)</span><input type="text" name="optionD_text" placeholder="D şıkkı metni"><input type="number" name="optionD_point" placeholder="Puanı"></div>
+                    </div>
+
+                    <button type="submit">Soruyu Veritabanına Kaydet</button>
+                </form>
+            </div>
+
+            <!-- VAZİFE EKLEME -->
+            <div class="card" style="border-top: 4px solid #f59e0b;">
+                <div class="card-header"><i class="fas fa-tasks"></i> Yeni Vazife Ata</div>
+                <form action="/add-question" method="POST">
+                    <input type="hidden" name="isTask" value="true">
+                    <input type="hidden" name="type" value="VAZIFE">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Kategori/Sınıf:</label>
+                            <input type="text" name="category" placeholder="Örn: 9. Sınıflar" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Görev Puanı:</label>
+                            <input type="number" name="maxPoints" required>
+                        </div>
+                    </div>
+                    <label>Vazife Detayı:</label>
+                    <textarea name="content" rows="4" required></textarea>
+                    <button type="submit" class="btn-warning">Vazifeyi Yayınla</button>
+                </form>
+            </div>
         </div>
 
-        <!-- VAZİFE EKLEME KARTI -->
-        <div class="card" style="border-top: 4px solid #ff9800;">
-            <h2><i class="fas fa-tasks"></i> Vazife / Görev Ekle</h2>
-            <form action="/add-question" method="POST">
-                <input type="hidden" name="isTask" value="true">
-                <input type="hidden" name="type" value="VAZIFE">
-                <input type="hidden" name="category" value="Genel">
-                <label>Görev Puanı:</label>
-                <input type="number" name="maxPoints" required>
-                <label>Vazife Tanımı:</label>
-                <textarea name="content" rows="4" required></textarea>
-                <button type="submit" style="background-color: #ff9800;">Vazifeyi Gönder</button>
+        <!-- EKLENEN SORU VE VAZİFELER LİSTESİ (ÖNCEKİNDE EKSİK OLAN KISIM) -->
+        <div class="card">
+            <div class="card-header"><i class="fas fa-list-ol"></i> Sistemdeki Sorular ve Vazifeler</div>
+            <table class="data-table">
+                <tr><th>Kategori</th><th>Tür</th><th>İçerik</th><th>Maks. Puan</th></tr>
+                <tr th:each="q : ${questions}">
+                    <td th:text="${q.category}">Kategori</td>
+                    <td>
+                        <span th:if="${q.isTask}" class="badge badge-warning">Vazife</span>
+                        <span th:unless="${q.isTask}" class="badge badge-student" th:text="${q.type}">Soru</span>
+                    </td>
+                    <td th:text="${q.content}">Soru İçeriği...</td>
+                    <td th:text="${q.maxPoints}">0</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(questions)}">
+                    <td colspan="4" style="text-align:center; color:#94a3b8;">Henüz sisteme eklenmiş bir soru veya vazife yok.</td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <!-- 3. SEKME: KULLANICILAR VE MENTÖR ONAYLARI -->
+    <section id="kullanicilar" class="content-section">
+
+        <div class="card" style="border-top: 4px solid #f59e0b; margin-bottom: 25px;">
+            <div class="card-header"><i class="fas fa-user-clock"></i> Onay Bekleyen Mentör Başvuruları</div>
+            <table class="data-table">
+                <tr><th>İsim Soyisim (Kullanıcı Adı)</th><th>Telefon</th><th>Bölge</th><th>İşlem</th></tr>
+
+                <tr th:each="user : ${users}" th:if="${user.role == 'MENTOR' and !user.approved}">
+                    <td th:text="${user.fullName} + ' (' + ${user.username} + ')'">Ad Soyad</td>
+                    <td th:text="${user.personalPhone}">Telefon</td>
+                    <td th:text="${user.region}">Bölge</td>
+                    <td>
+                        <form action="/admin/approve-mentor" method="POST" style="margin: 0;">
+                            <input type="hidden" name="mentor_id" th:value="${user.id}">
+                            <button type="submit" style="padding: 6px 12px; font-size:12px; background-color:#10b981;"><i class="fas fa-check"></i> Onayla</button>
+                        </form>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><i class="fas fa-id-card"></i> Sisteme Kayıtlı Aktif Kullanıcılar</div>
+            <table class="data-table">
+                <tr><th>İsim Soyisim (Kullanıcı Adı)</th><th>Rol</th><th>Bölge / Kategori</th></tr>
+
+                <tr th:each="user : ${users}" th:if="${user.approved}">
+                    <td th:text="${user.fullName} + ' (' + ${user.username} + ')'">Ad Soyad</td>
+                    <td>
+                        <span th:if="${user.role == 'ADMIN'}" class="badge badge-admin">Yönetici</span>
+                        <span th:if="${user.role == 'MENTOR'}" class="badge badge-mentor">Mentör</span>
+                        <span th:if="${user.role == 'STUDENT'}" class="badge badge-student">Öğrenci</span>
+                    </td>
+                    <td th:text="${user.role == 'MENTOR' ? (user.region != null ? user.region : 'Genel') : (user.gradeClass != null ? user.gradeClass : 'Belirtilmemiş')}">Detay</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(users)}">
+                    <td colspan="3" style="text-align:center; color:#94a3b8;">Sistemde kayıtlı aktif kullanıcı bulunmamaktadır.</td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <!-- 4. SEKME: ATAMALAR -->
+    <section id="atamalar" class="content-section">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-network-wired"></i> Öğrenci - Mentör Eşleştirmesi</div>
+            <form action="/admin/assign-mentor" method="POST">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Mentör Seç:</label>
+                        <select name="mentor_id" required>
+                            <option value="">-- Atanacak Mentörü Seçin --</option>
+                            <option th:each="mentor : ${users}" th:if="${mentor.role == 'MENTOR' and mentor.approved}" th:value="${mentor.id}" th:text="${mentor.fullName} + ' (' + ${mentor.region != null ? mentor.region : 'Genel'} + ')'"></option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Öğrenci Seç:</label>
+                        <select name="student_id" required>
+                            <option value="">-- Atanacak Öğrenciyi Seçin --</option>
+                            <option th:each="student : ${users}" th:if="${student.role == 'STUDENT'}" th:value="${student.id}" th:text="${student.fullName} + ( ${student.assignedMentorId != null} ? ' (Zaten Atanmış)' : ' (Atanmamış)' )"></option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit"><i class="fas fa-link"></i> Öğrenciyi Mentöre Bağla</button>
             </form>
         </div>
-    </div>
-</div>
+    </section>
+
+    <!-- 5. SEKME: BİLDİRİMLER VE MESAJ LOGLARI -->
+    <section id="mesaj-log" class="content-section">
+        <div class="card" style="border-top: 4px solid #8b5cf6;">
+            <div class="card-header"><i class="fas fa-user-secret"></i> Platform İçi İletişim Logları (Denetim)</div>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Sistemde gönderilen tüm özel mesajlar güvenlik ve kalite kontrol amacıyla aşağıda tarih sırasına göre listelenmektedir.</p>
+
+            <table class="data-table">
+                <tr>
+                    <th>Tarih / Saat</th>
+                    <th>Kimden (Gönderen)</th>
+                    <th>Kime (Alıcı)</th>
+                    <th style="width: 40%;">Mesaj İçeriği</th>
+                </tr>
+                <tr th:each="log : ${adminMessages}">
+                    <td th:text="${#temporals.format(log.sentAt, 'dd.MM.yyyy HH:mm')}"></td>
+                    <td style="font-weight: bold; color: #3b82f6;" th:text="${log.senderName}"></td>
+                    <td style="font-weight: bold; color: #10b981;" th:text="${log.receiverName}"></td>
+                    <td th:text="${log.content}" style="font-style: italic;"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(adminMessages)}">
+                    <td colspan="4" style="text-align:center; color:#94a3b8;">Sistemde henüz kaydedilmiş bir mesaj logu bulunmuyor.</td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <!-- 6. SEKME: ŞİFRE TALEPLERİ -->
+    <section id="bildirimler" class="content-section">
+        <div class="card" style="border-top: 4px solid #ef4444;">
+            <div class="card-header"><i class="fas fa-bell"></i> Şifre Sıfırlama Talepleri</div>
+            <table class="data-table">
+                <tr><th>Tarih / Saat</th><th>Mesaj İçeriği</th></tr>
+                <tr th:each="notif : ${notifications}">
+                    <td th:text="${#temporals.format(notif.createdAt, 'dd.MM.yyyy HH:mm')}">Tarih</td>
+                    <td th:text="${notif.message}" style="font-weight:500;">İçerik</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(notifications)}">
+                    <td colspan="2" style="text-align:center; color:#94a3b8;">Şu an bekleyen herhangi bir sistem bildirimi yok.</td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<!-- SEKME VE ARAYÜZ KONTROL SCRİPTİ -->
 <script>
     function turKontrolEt() {
         var secim = document.getElementById("soruTuruSecimi").value;
         var siklarAlani = document.getElementById("siklarAlani");
-        if (secim === "COKTAN_SECMELI") { siklarAlani.classList.add("aktif"); } else { siklarAlani.classList.remove("aktif"); }
+        if (secim === "COKTAN_SECMELI") {
+            siklarAlani.classList.add("aktif");
+        } else {
+            siklarAlani.classList.remove("aktif");
+        }
+    }
+
+    function degistirSekme(sekmeId, menuElemani) {
+        var menuler = document.querySelectorAll('.sidebar-menu li');
+        menuler.forEach(function(menu) { menu.classList.remove('active'); });
+
+        menuElemani.classList.add('active');
+        document.getElementById('sayfaBasligi').innerText = menuElemani.innerText;
+
+        var sekmeler = document.querySelectorAll('.content-section');
+        sekmeler.forEach(function(sekme) { sekme.classList.remove('active'); });
+
+        document.getElementById(sekmeId).classList.add('active');
     }
 </script>
 </body>

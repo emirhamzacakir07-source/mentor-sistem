@@ -2,106 +2,353 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Öğrenci Paneli</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Öğrenci Portalı - Liderlik Akademisi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { margin: 0; padding: 0; min-height: 100vh; font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
-        .arkaplan-resmi { position: fixed; top: -5%; left: -5%; width: 110%; height: 110%; background-image: url('https://i.ibb.co/hF8nsNcF/Whats-App-mage-2026-08-28-at-20-10-26.jpg'); background-size: cover; background-position: center; filter: blur(15px) brightness(0.5); z-index: -1; }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); padding: 25px; margin-bottom: 25px; }
-        .welcome-title { text-align: center; font-size: 2.2rem; font-weight: 800; color: #fff; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); margin-top: 30px; margin-bottom: 30px; }
-        .question-box { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        /* GENEL AYARLAR */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+        body {
+            background-color: #f1f5f9;
+            color: #334155;
+        }
 
-        .bg-vazife { background-color: #ff9800 !important; color: #fff; }
-        .bg-soru { background-color: #007bff !important; color: #fff; }
+        /* ÜST BAR */
+        .topbar {
+            background: #ffffff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .topbar h2 { font-size: 20px; color: #0f172a; }
+        .logout-btn { color: #ef4444; text-decoration: none; font-weight: 600; }
 
-        .secenek-kutusu { display: block; padding: 12px; margin-bottom: 10px; border: 2px solid #e9ecef; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-weight: 600; background: #f8f9fa; }
-        .secenek-kutusu:hover { background: #e3f2fd; border-color: #007bff; }
-        .secenek-kutusu input[type="radio"] { margin-right: 10px; transform: scale(1.2); }
+        /* 3 SÜTUNLU IZGARA SİSTEMİ */
+        .container {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            gap: 25px;
+            padding: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+            align-items: start;
+        }
+
+        /* SOL VE SAĞ PANELLER */
+        .side-panel { display: flex; flex-direction: column; gap: 20px; }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+            border: 1px solid #e2e8f0;
+        }
+        .card h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* KART DETAYLARI */
+        .profile-info p {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #475569;
+        }
+        .score-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 15px;
+        }
+        .score-box h4 { color: #d97706; font-size: 24px; }
+
+        /* ORTA ALAN (SORULAR VE VAZİFELER) */
+        .main-panel { display: flex; flex-direction: column; gap: 20px; }
+
+        .content-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+            border: 1px solid #e2e8f0;
+            border-left: 5px solid #3b82f6;
+        }
+        .content-card.task-card { border-left-color: #f59e0b; }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .category-badge {
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .points-badge {
+            background: #dcfce7;
+            color: #15803d;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .options-list {
+            margin: 15px 0;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .options-list p { margin-bottom: 5px; font-size: 14px; }
+
+        textarea, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            outline: none;
+        }
+        textarea:focus, input:focus { border-color: #3b82f6; }
+
+        button {
+            padding: 10px 20px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        /* CEVAPLANMIŞ KUTULAR */
+        .answered-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .mentor-feedback {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 13px;
+            font-style: italic;
+        }
+
+        .notification-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+
+        /* CHAT ALANI */
+        .chat-box {
+            max-height: 250px;
+            overflow-y: auto;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .chat-msg {
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            max-width: 90%;
+        }
+        .msg-me {
+            background: #3b82f6;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .msg-other {
+            background: #e2e8f0;
+            color: #0f172a;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
     </style>
 </head>
 <body>
 
-<div class="arkaplan-resmi"></div>
+<header class="topbar">
+    <h2><i class="fas fa-graduation-cap"></i> Liderlik & Mentörlük Akademisi</h2>
+    <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
+</header>
 
-<div class="container pb-5">
-    <h1 class="welcome-title">ÖĞRENCİ GÖSTERGE PANELİ</h1>
-
-    <div class="row justify-content-center">
-        <!-- SOL SÜTUN (Sadece Profil) -->
-        <div class="col-lg-4">
-            <div class="glass-card border-top border-4 border-primary">
-                <h4 class="fw-bold"><i class="fas fa-id-badge text-primary"></i> Profil</h4>
-                <hr>
-                <p class="mb-2"><strong>İsim:</strong> <span th:text="${user != null ? user.fullName : 'Öğrenci'}"></span></p>
-                <p class="mb-2"><strong>Sınıf:</strong> <span th:text="${user != null ? user.gradeClass : '-'}"></span></p>
-                <hr>
-                <p class="mb-0 font-weight-bold">Mentör İrtibat:<br> <span class="text-primary fw-bold">0551 011 86 74</span></p>
+<div class="container">
+    <!-- SOL SÜTUN: PROFİL VE MENTÖR -->
+    <aside class="side-panel">
+        <div class="card">
+            <h3><i class="fas fa-user-circle"></i> Öğrenci Profilim</h3>
+            <div class="profile-info">
+                <p><strong>Ad Soyad:</strong> <span th:text="${student.fullName}"></span></p>
+                <p><strong>Sınıf:</strong> <span th:text="${student.gradeClass != null ? student.gradeClass : 'Belirtilmemiş'}"></span></p>
             </div>
-            <a href="/logout" class="btn btn-danger w-100 fw-bold mb-4 py-2"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
+            <div class="score-box">
+                <p style="font-size: 12px; color: #b45309; font-weight:600;">TOPLAM PUANINIZ</p>
+                <h4 th:text="${totalScore}">0</h4>
+            </div>
         </div>
 
-        <!-- SAĞ SÜTUN (Sorular ve Vazifeler - Puanlar Gizlendi!) -->
-        <div class="col-lg-8">
-            <div class="glass-card">
-                <h3 class="mb-4 text-center text-primary fw-bold border-bottom pb-3">
-                    <i class="fas fa-list-check"></i> ATANAN GÖREVLER
-                </h3>
+        <div class="card" style="border-top: 3px solid #10b981;">
+            <h3><i class="fas fa-chalkboard-teacher"></i> Mentör Bilgileri</h3>
+            <div th:if="${mentor != null}" class="profile-info">
+                <p><strong>Mentör:</strong> <span th:text="${mentor.fullName}"></span></p>
+                <p><strong>Branş/Bölge:</strong> <span th:text="${mentor.region != null ? mentor.region : 'Genel'}"></span></p>
+            </div>
+            <div th:if="${mentor == null}" style="color: #ef4444; font-size: 13px; font-weight: 500; text-align: center;">
+                <i class="fas fa-exclamation-circle"></i> Henüz bir mentöre atanmadınız.
+            </div>
+        </div>
+    </aside>
 
-                <div th:if="${#lists.isEmpty(questions)}" class="alert alert-info text-center fw-bold">Şu an cevap bekleyen görev yok.</div>
+    <!-- ORTA SÜTUN: SORULAR VE VAZİFELER -->
+    <main class="main-panel">
 
-                <div th:each="q, iterStat : ${questions}" class="question-box border-start border-5"
-                     th:classappend="${q.task ? 'border-warning' : 'border-primary'}">
+        <h2 style="font-size: 18px; color: #1e293b; margin-bottom: 5px;"><i class="fas fa-book-open"></i> Soru Havuzu</h2>
+        <hr style="border: 0; border-top: 1px solid #cbd5e1; margin-bottom: 15px;">
 
-                    <div class="mb-3">
-                        <!-- Otomatik Numaralandırma (1. Vazife, 2. Soru gibi) -->
-                        <span class="badge px-3 py-2 fs-6 mb-2" th:classappend="${q.task ? 'bg-vazife' : 'bg-soru'}"
-                              th:text="${iterStat.count} + '. ' + (${q.task} ? 'Vazife' : 'Soru')">1. Soru</span>
+        <!-- SORULAR DÖNGÜSÜ -->
+        <div th:each="q : ${questions}" class="content-card">
+            <div class="question-header">
+                <span class="category-badge" th:text="${q.category}">Kategori</span>
+                <span class="points-badge">Maks Puan: <span th:text="${q.maxPoints}"></span></span>
+            </div>
+            <p style="font-weight: 600; margin-bottom: 10px;" th:text="${q.content}">Soru Metni</p>
 
-                        <h5 class="mt-2 text-dark fw-bold" th:text="${q.content}">Soru Metni</h5>
-                    </div>
+            <!-- Şıklar (Eğer çoktan seçmeliyse) -->
+            <div th:if="${q.type == 'COKTAN_SECMELI'}" class="options-list">
+                <p><strong>A)</strong> <span th:text="${q.optionA}"></span></p>
+                <p><strong>B)</strong> <span th:text="${q.optionB}"></span></p>
+                <p><strong>C)</strong> <span th:text="${q.optionC}"></span></p>
+                <p><strong>D)</strong> <span th:text="${q.optionD}"></span></p>
+            </div>
 
-                    <!-- Cevaplanmadıysa -->
-                    <div th:unless="${#lists.contains(answers.![questionId], q.id)}" class="mt-3 bg-light p-3 rounded border">
-                        <form action="/submit-answer" method="post">
-                            <input type="hidden" name="questionId" th:value="${q.id}">
+            <!-- DURUM KONTROLÜ: Cevaplanmış mı? -->
+            <div th:if="${answerMap.containsKey(q.id)}" class="answered-box">
+                <p style="font-size: 13px; color: #166534;"><i class="fas fa-check-circle"></i> <strong>Sizin Cevabınız:</strong> <span th:text="${answerMap.get(q.id).answerText}"></span></p>
 
-                            <!-- Çoktan Seçmeli İse -->
-                            <div th:if="${q.type == 'COKTAN_SECMELI'}">
-                                <label class="secenek-kutusu">
-                                    <input type="radio" name="answerText" th:value="${q.optionA}" required> <span th:text="${q.optionA}">A</span>
-                                </label>
-                                <label class="secenek-kutusu">
-                                    <input type="radio" name="answerText" th:value="${q.optionB}"> <span th:text="${q.optionB}">B</span>
-                                </label>
-                                <label class="secenek-kutusu">
-                                    <input type="radio" name="answerText" th:value="${q.optionC}"> <span th:text="${q.optionC}">C</span>
-                                </label>
-                                <label class="secenek-kutusu">
-                                    <input type="radio" name="answerText" th:value="${q.optionD}"> <span th:text="${q.optionD}">D</span>
-                                </label>
-                            </div>
+                <div th:if="${answerMap.get(q.id).mentorFeedback != null}" class="mentor-feedback">
+                    <p><strong>Mentör Notu:</strong> <span th:text="${answerMap.get(q.id).mentorScore}"></span>/100</p>
+                    <p><strong>Mesaj:</strong> <span th:text="${answerMap.get(q.id).mentorFeedback}"></span></p>
+                </div>
+                <div th:unless="${answerMap.get(q.id).mentorFeedback != null}" style="margin-top: 10px; font-size: 12px; color: #d97706;">
+                    <i class="fas fa-clock"></i> Cevabınız mentör onayında bekliyor.
+                </div>
+            </div>
 
-                            <!-- Klasik/Vazife İse -->
-                            <div th:if="${q.type != 'COKTAN_SECMELI'}">
-                                <textarea class="form-control mb-3" name="answerText" rows="3" placeholder="Cevabınızı buraya yazın..." required></textarea>
-                            </div>
+            <!-- Cevaplanmadıysa Form Çıksın -->
+            <form th:unless="${answerMap.containsKey(q.id)}" action="/submit-answer" method="POST" style="margin-top: 15px;">
+                <input type="hidden" name="questionId" th:value="${q.id}">
+                <textarea name="answerText" rows="2" placeholder="Cevabınızı buraya yazınız (Örn: A veya metin olarak)..." required></textarea>
+                <button type="submit"><i class="fas fa-paper-plane"></i> Cevabı Gönder</button>
+            </form>
+        </div>
 
-                            <button type="submit" class="btn btn-success w-100 fw-bold">Gönder</button>
-                        </form>
-                    </div>
+        <h2 style="font-size: 18px; color: #1e293b; margin-top: 20px; margin-bottom: 5px;"><i class="fas fa-tasks"></i> Vazifeleriniz</h2>
+        <hr style="border: 0; border-top: 1px solid #cbd5e1; margin-bottom: 15px;">
 
-                    <!-- Cevaplandıysa -->
-                    <div th:if="${#lists.contains(answers.![questionId], q.id)}" class="mt-3">
-                        <div class="alert alert-success fw-bold mb-0">
-                            <i class="fas fa-check-circle"></i> Tamamlandı! Değerlendirme bekleniyor.
-                        </div>
-                    </div>
+        <!-- VAZİFELER DÖNGÜSÜ -->
+        <div th:each="t : ${tasks}" class="content-card task-card">
+            <div class="question-header">
+                <span class="category-badge" style="background: #fef3c7; color: #d97706;" th:text="${t.category}">Kategori</span>
+                <span class="points-badge">Maks Puan: <span th:text="${t.maxPoints}"></span></span>
+            </div>
+            <p style="font-weight: 600; margin-bottom: 10px;" th:text="${t.content}">Vazife Metni</p>
+
+            <!-- DURUM KONTROLÜ: Tamamlanmış mı? -->
+            <div th:if="${answerMap.containsKey(t.id)}" class="answered-box">
+                <p style="font-size: 13px; color: #166534;"><i class="fas fa-check-circle"></i> <strong>Gönderilen Rapor:</strong> <span th:text="${answerMap.get(t.id).answerText}"></span></p>
+
+                <div th:if="${answerMap.get(t.id).mentorFeedback != null}" class="mentor-feedback">
+                    <p><strong>Mentör Puanı:</strong> <span th:text="${answerMap.get(t.id).mentorScore}"></span>/100</p>
+                    <p><strong>Geri Bildirim:</strong> <span th:text="${answerMap.get(t.id).mentorFeedback}"></span></p>
+                </div>
+            </div>
+
+            <!-- Tamamlanmadıysa Form Çıksın -->
+            <form th:unless="${answerMap.containsKey(t.id)}" action="/submit-answer" method="POST" style="margin-top: 15px;">
+                <input type="hidden" name="questionId" th:value="${t.id}">
+                <textarea name="answerText" rows="3" placeholder="Vazifeyi tamamladığınıza dair raporunuzu yazın..." required></textarea>
+                <button type="submit" style="background-color: #f59e0b;"><i class="fas fa-check"></i> Vazifeyi Raporla</button>
+            </form>
+        </div>
+
+    </main>
+
+    <!-- SAĞ SÜTUN: BİLDİRİMLER VE MESAJLAR -->
+    <aside class="side-panel">
+
+        <!-- ÖZEL MESAJ KUTUSU -->
+        <div class="card" style="border-top: 3px solid #8b5cf6;" th:if="${mentor != null}">
+            <h3><i class="fas fa-envelope"></i> Mentörle Mesajlaş</h3>
+
+            <div class="chat-box">
+                <div th:each="msg : ${chatMessages}" th:class="${msg.senderId == student.id ? 'chat-msg msg-me' : 'chat-msg msg-other'}">
+                    <span th:text="${msg.content}"></span>
+                    <div style="font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: right;" th:text="${#temporals.format(msg.sentAt, 'HH:mm')}"></div>
+                </div>
+                <div th:if="${#lists.isEmpty(chatMessages)}" style="text-align: center; color: #94a3b8; font-size: 12px; padding: 10px;">
+                    Mentörünüzle henüz bir mesajınız yok. Aklınıza takılanları buraya yazabilirsiniz.
+                </div>
+            </div>
+
+            <form action="/send-message" method="POST">
+                <input type="hidden" name="receiverId" th:value="${mentor.id}">
+                <textarea name="content" rows="2" placeholder="Mesajınızı yazın..." required style="margin-bottom: 5px;"></textarea>
+                <button type="submit" style="background-color: #8b5cf6; padding: 8px;"><i class="fas fa-paper-plane"></i> Gönder</button>
+            </form>
+        </div>
+
+        <!-- BİLDİRİMLER -->
+        <div class="card" style="border-top: 3px solid #ef4444;">
+            <h3><i class="fas fa-bell"></i> Sistem Duyuruları</h3>
+            <div>
+                <div th:each="notif : ${notifications}" class="notification-item">
+                    <span style="font-weight: 600; color: #0f172a;" th:text="${#temporals.format(notif.createdAt, 'dd.MM.yyyy')}"></span><br>
+                    <span th:text="${notif.message}"></span>
                 </div>
             </div>
         </div>
-    </div>
+
+    </aside>
 </div>
+
 </body>
 </html>

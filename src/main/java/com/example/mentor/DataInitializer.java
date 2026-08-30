@@ -21,6 +21,7 @@ public class DataInitializer implements CommandLineRunner {
             admin.setUsername("A.D.M.İ.N");
             admin.setPassword("hayrat14531299.,"); // Senin belirlediğin özel yönetici şifresi
             admin.setRole("ADMIN"); // Rolü Admin olarak atanıyor
+            admin.setApproved(true); // GÜVENLİK GÜNCELLEMESİ: Admin otomatik olarak tam onaylı kaydedilir.
             admin.setInactiveWarningSent(false);
             admin.setLastLoginDate(LocalDateTime.now());
 

@@ -6,6 +6,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 public class AppController {
@@ -15,6 +20,7 @@ public class AppController {
     @Autowired private AnswerRepository answerRepository;
     @Autowired private AiService aiService;
     @Autowired private NotificationRepository notificationRepository;
+    @Autowired private MessageRepository messageRepository;
 
     @GetMapping("/")
     public String loginPage() { return "index"; }
@@ -28,43 +34,58 @@ public class AppController {
             model.addAttribute("error", "Bu kullanıcı adı zaten alınmış!");
             return "register";
         }
-        user.setRole("STUDENT"); // Varsayılan kayıt olanlar öğrenci
+        user.setRole("STUDENT");
+        user.setApproved(true);
         user.setLastLoginDate(LocalDateTime.now());
         userRepository.save(user);
         return "redirect:/?success=true";
+    }
+
+    @GetMapping("/mentor-register")
+    public String mentorRegisterPage() { return "mentor-register"; }
+
+    @PostMapping("/mentor-register")
+    public String registerMentor(@ModelAttribute User user, Model model) {
+        if (userRepository.findByUsername(user.getUsername()) != null) {
+            model.addAttribute("error", "Bu kullanıcı adı zaten alınmış!");
+            return "mentor-register";
+        }
+        user.setRole("MENTOR");
+        user.setApproved(false);
+        user.setLastLoginDate(LocalDateTime.now());
+        userRepository.save(user);
+        model.addAttribute("success", true);
+        return "mentor-register";
     }
 
     @PostMapping("/login")
     public String login(@RequestParam String username, @RequestParam String password, HttpSession session, Model model) {
         User user = userRepository.findByUsernameAndPassword(username, password);
         if (user != null) {
+            if ("MENTOR".equals(user.getRole()) && !user.isApproved()) {
+                model.addAttribute("error", "Hesabınız henüz onaylanmamış. Lütfen bekleyiniz.");
+                return "index";
+            }
             user.setLastLoginDate(LocalDateTime.now());
             user.setInactiveWarningSent(false);
             userRepository.save(user);
 
-            // GÜVENLİK: Giriş yapan kişinin kimliğini oturuma (session) kaydediyoruz
             session.setAttribute("loggedInUserId", user.getId());
             session.setAttribute("loggedInUserRole", user.getRole());
             session.setAttribute("loggedInUsername", user.getUsername());
 
-            // Yönlendirmeler
-            if (user.getRole().equals("ADMIN")) {
-                return "redirect:/admin";
-            } else if (user.getRole().equals("MENTOR")) {
-                return "redirect:/mentor"; // Mentör paneline yönlendirme eklendi
-            } else {
-                return "redirect:/student";
-            }
+            if (user.getRole().equals("ADMIN")) return "redirect:/admin";
+            else if (user.getRole().equals("MENTOR")) return "redirect:/mentor";
+            else return "redirect:/student";
         }
         model.addAttribute("error", "Kullanıcı adı veya şifre hatalı!");
         return "index";
     }
 
-    // YENİ: Çıkış Yapma Metodu (Oturumu Kapatır)
     @GetMapping("/logout")
     public String logout(HttpSession session) {
-        session.invalidate(); // Kullanıcının tüm oturum bilgilerini temizler
-        return "redirect:/"; // Giriş ekranına geri yollar
+        session.invalidate();
+        return "redirect:/";
     }
 
     @GetMapping("/forgot-password")
@@ -75,81 +96,244 @@ public class AppController {
         User user = userRepository.findByUsername(username);
         if (user != null) {
             Notification n = new Notification();
-            n.setMessage("🔴 ŞİFRE SIFIRLAMA TALEBİ: " + user.getFullName() + " (" + user.getUsername() + ") şifresini unuttu.");
+            n.setMessage("🔴 ŞİFRE SIFIRLAMA TALEBİ: " + user.getFullName());
             n.setCreatedAt(LocalDateTime.now());
             notificationRepository.save(n);
-
-            model.addAttribute("success", "Talebiniz yöneticiye iletildi. Lütfen şifrenizi sıfırlamak için şu numarayla irtibata geçin: 0551 011 86 74");
+            model.addAttribute("success", "Talebiniz yöneticiye iletildi.");
         } else {
-            model.addAttribute("error", "Bu kullanıcı adıyla bir hesap bulunamadı!");
+            model.addAttribute("error", "Kullanıcı bulunamadı!");
         }
         return "forgot-password";
     }
 
+    @PostMapping("/send-message")
+    public String sendMessage(@RequestParam Long receiverId, @RequestParam String content, HttpSession session) {
+        Long senderId = (Long) session.getAttribute("loggedInUserId");
+        String role = (String) session.getAttribute("loggedInUserRole");
+
+        if (senderId == null) return "redirect:/";
+
+        Message msg = new Message();
+        msg.setSenderId(senderId);
+        msg.setReceiverId(receiverId);
+        msg.setContent(content);
+        msg.setSentAt(LocalDateTime.now());
+        msg.setRead(false);
+        messageRepository.save(msg);
+
+        if ("MENTOR".equals(role)) return "redirect:/mentor";
+        else return "redirect:/student";
+    }
+
     @GetMapping("/admin")
     public String adminPanel(HttpSession session, Model model) {
-        // Güvenlik kontrolü: Sadece admin girebilir
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
-
         model.addAttribute("notifications", notificationRepository.findAll());
         model.addAttribute("questions", questionRepository.findAll());
         model.addAttribute("answers", answerRepository.findAll());
-        model.addAttribute("students", userRepository.findAll());
+        model.addAttribute("users", userRepository.findAll());
+
+        List<Message> allMessages = messageRepository.findAllByOrderBySentAtDesc();
+        List<Map<String, Object>> adminMessages = new ArrayList<>();
+        for (Message m : allMessages) {
+            Map<String, Object> map = new HashMap<>();
+            User sender = userRepository.findById(m.getSenderId()).orElse(null);
+            User receiver = userRepository.findById(m.getReceiverId()).orElse(null);
+            map.put("senderName", sender != null ? sender.getFullName() + " (" + sender.getRole() + ")" : "Bilinmeyen");
+            map.put("receiverName", receiver != null ? receiver.getFullName() + " (" + receiver.getRole() + ")" : "Bilinmeyen");
+            map.put("content", m.getContent());
+            map.put("sentAt", m.getSentAt());
+            adminMessages.add(map);
+        }
+        model.addAttribute("adminMessages", adminMessages);
+
         return "admin";
     }
 
     @PostMapping("/add-question")
-    public String addQuestion(@RequestParam String content, @RequestParam String type, HttpSession session) {
-        // Güvenlik kontrolü
+    public String addQuestion(
+            @RequestParam(required = false) Long id,
+            @RequestParam String content, @RequestParam String type,
+            @RequestParam(required = false, defaultValue = "false") boolean isTask,
+            @RequestParam(required = false) String category, @RequestParam(required = false) Integer maxPoints,
+            @RequestParam(required = false) String optionA_text, @RequestParam(required = false) Integer optionA_point,
+            @RequestParam(required = false) String optionB_text, @RequestParam(required = false) Integer optionB_point,
+            @RequestParam(required = false) String optionC_text, @RequestParam(required = false) Integer optionC_point,
+            @RequestParam(required = false) String optionD_text, @RequestParam(required = false) Integer optionD_point,
+            @RequestParam(required = false, defaultValue = "false") boolean allowMultipleSelections,
+            HttpSession session) {
+
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
 
-        Question q = new Question();
-        q.setContent(content);
-        q.setType(type);
+        Question q;
+        if (id != null) {
+            q = questionRepository.findById(id).orElse(new Question());
+        } else {
+            q = new Question();
+        }
+
+        q.setContent(content); q.setType(type); q.setTask(isTask); q.setCategory(category); q.setMaxPoints(maxPoints);
+        q.setAllowMultipleSelections(allowMultipleSelections);
+
+        if ("COKTAN_SECMELI".equals(type)) {
+            q.setOptionA(optionA_text); q.setOptionAPoint(optionA_point);
+            q.setOptionB(optionB_text); q.setOptionBPoint(optionB_point);
+            q.setOptionC(optionC_text); q.setOptionCPoint(optionC_point);
+            q.setOptionD(optionD_text); q.setOptionDPoint(optionD_point);
+        } else {
+            q.setOptionA(null); q.setOptionB(null); q.setOptionC(null); q.setOptionD(null);
+        }
         questionRepository.save(q);
         return "redirect:/admin";
     }
 
+    @PostMapping("/admin/delete-question")
+    public String deleteQuestion(@RequestParam Long id, HttpSession session) {
+        if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
+
+        List<Answer> answers = answerRepository.findByQuestionId(id);
+        answerRepository.deleteAll(answers);
+        questionRepository.deleteById(id);
+
+        return "redirect:/admin";
+    }
+
+    @PostMapping("/admin/assign-mentor")
+    public String assignMentor(@RequestParam Long mentor_id, @RequestParam Long student_id, HttpSession session) {
+        if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
+        User student = userRepository.findById(student_id).orElse(null);
+        if (student != null && "STUDENT".equals(student.getRole())) {
+            student.setAssignedMentorId(mentor_id);
+            userRepository.save(student);
+        }
+        return "redirect:/admin";
+    }
+
+    @PostMapping("/admin/approve-mentor")
+    public String approveMentor(@RequestParam Long mentor_id, HttpSession session) {
+        if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
+        User mentor = userRepository.findById(mentor_id).orElse(null);
+        if (mentor != null && "MENTOR".equals(mentor.getRole())) {
+            mentor.setApproved(true);
+            userRepository.save(mentor);
+        }
+        return "redirect:/admin";
+    }
+
+    @GetMapping("/mentor")
+    public String mentorPanel(HttpSession session, Model model) {
+        if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
+        Long mentorId = (Long) session.getAttribute("loggedInUserId");
+
+        List<User> allUsers = (List<User>) userRepository.findAll();
+        List<User> myStudents = allUsers.stream().filter(u -> "STUDENT".equals(u.getRole()) && mentorId.equals(u.getAssignedMentorId())).collect(Collectors.toList());
+        model.addAttribute("myStudents", myStudents);
+
+        List<Map<String, Object>> studentAnswers = new ArrayList<>();
+        for (User student : myStudents) {
+            List<Answer> answers = answerRepository.findByStudentId(student.getId());
+            for (Answer ans : answers) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", ans.getId());
+                map.put("studentName", student.getFullName());
+                map.put("answerText", ans.getAnswerText());
+                map.put("aiNote", ans.getAiNote());
+                map.put("mentorFeedback", ans.getMentorFeedback());
+                Question q = questionRepository.findById(ans.getQuestionId()).orElse(null);
+                map.put("questionContent", q != null ? q.getContent() : "Soru Silinmiş");
+                studentAnswers.add(map);
+            }
+        }
+        model.addAttribute("studentAnswers", studentAnswers);
+
+        List<Message> myMessages = messageRepository.findBySenderIdOrReceiverIdOrderBySentAtAsc(mentorId, mentorId);
+        List<Map<String, Object>> chatMessages = new ArrayList<>();
+        for (Message m : myMessages) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("content", m.getContent());
+            map.put("sentAt", m.getSentAt());
+            map.put("isMine", m.getSenderId().equals(mentorId));
+
+            Long otherUserId = m.getSenderId().equals(mentorId) ? m.getReceiverId() : m.getSenderId();
+            User otherUser = userRepository.findById(otherUserId).orElse(null);
+            map.put("otherUserName", otherUser != null ? otherUser.getFullName() : "Bilinmeyen");
+
+            chatMessages.add(map);
+        }
+        model.addAttribute("chatMessages", chatMessages);
+
+        return "mentor";
+    }
+
+    @PostMapping("/mentor/submit-feedback")
+    public String submitFeedback(@RequestParam Long answerId, @RequestParam Integer mentorScore, @RequestParam String mentorFeedback, HttpSession session) {
+        if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
+        Answer ans = answerRepository.findById(answerId).orElse(null);
+        if (ans != null) {
+            ans.setMentorScore(mentorScore);
+            ans.setMentorFeedback(mentorFeedback);
+            answerRepository.save(ans);
+        }
+        return "redirect:/mentor";
+    }
+
+    @PostMapping("/mentor/send-announcement")
+    public String sendAnnouncement(@RequestParam String message, HttpSession session) {
+        if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
+        String mentorName = (String) session.getAttribute("loggedInUsername");
+        Notification n = new Notification();
+        n.setMessage("📢 DUYURU (" + mentorName + "): " + message);
+        n.setCreatedAt(LocalDateTime.now());
+        notificationRepository.save(n);
+        return "redirect:/mentor";
+    }
+
     @GetMapping("/student")
     public String studentPanel(HttpSession session, Model model) {
-        // Güvenlik kontrolü: Sadece öğrenci girebilir
         if (!"STUDENT".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
 
         Long studentId = (Long) session.getAttribute("loggedInUserId");
+        User student = userRepository.findById(studentId).orElse(null);
 
-        model.addAttribute("questions", questionRepository.findAll());
+        User mentor = null;
+        if (student != null && student.getAssignedMentorId() != null) {
+            mentor = userRepository.findById(student.getAssignedMentorId()).orElse(null);
+        }
 
-        // ÖNEMLİ DÜZELTME: Öğrenci artık SADECE KENDİ cevaplarını görecek (findAll yerine findByStudentId)
-        model.addAttribute("answers", answerRepository.findByStudentId(studentId));
+        List<Question> allQuestions = (List<Question>) questionRepository.findAll();
+        List<Question> tasks = allQuestions.stream().filter(Question::isTask).collect(Collectors.toList());
+        List<Question> questions = allQuestions.stream().filter(q -> !q.isTask()).collect(Collectors.toList());
+
+        List<Answer> answers = answerRepository.findByStudentId(studentId);
+        int totalScore = answers.stream().filter(a -> a.getMentorScore() != null).mapToInt(Answer::getMentorScore).sum();
+
+        Map<Long, Answer> answerMap = new HashMap<>();
+        for (Answer a : answers) { answerMap.put(a.getQuestionId(), a); }
+
+        model.addAttribute("student", student);
+        model.addAttribute("mentor", mentor);
+        model.addAttribute("tasks", tasks);
+        model.addAttribute("questions", questions);
+        model.addAttribute("answerMap", answerMap);
+        model.addAttribute("totalScore", totalScore);
+        model.addAttribute("notifications", notificationRepository.findAll());
+
+        List<Message> myMessages = messageRepository.findBySenderIdOrReceiverIdOrderBySentAtAsc(studentId, studentId);
+        model.addAttribute("chatMessages", myMessages);
+
         return "student";
     }
 
     @PostMapping("/submit-answer")
     public String submitAnswer(@RequestParam Long questionId, @RequestParam String answerText, HttpSession session) {
-        // Güvenlik kontrolü
         if (!"STUDENT".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
-
         Long studentId = (Long) session.getAttribute("loggedInUserId");
-
         Answer a = new Answer();
         a.setQuestionId(questionId);
         a.setAnswerText(answerText);
-
-        // KRİTİK DÜZELTME: Eskiden burada '2L' yazıyordu, veriler karışıyordu. Şimdi gerçek ID alınıyor.
         a.setStudentId(studentId);
-
         a.setAiNote(aiService.analyzeText(answerText));
         answerRepository.save(a);
-
         return "redirect:/student";
-    }
-
-    // YENİ: Mentör paneli için temel iskelet
-    @GetMapping("/mentor")
-    public String mentorPanel(HttpSession session, Model model) {
-        if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
-
-        // İleride buraya mentörün göreceği verileri ekleyeceğiz
-        return "mentor";
     }
 }

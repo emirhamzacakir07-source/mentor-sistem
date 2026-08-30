@@ -1,8 +1,7 @@
 package com.example.mentor;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.CrudRepository; // veya JpaRepository
 
-public interface NotificationRepository extends JpaRepository<Notification, Long> {
+public interface NotificationRepository extends org.springframework.data.jpa.repository.JpaRepository<Notification, Long> {
     // Şimdilik standart CRUD (Kaydet, Sil, Bul) işlemleri yeterli.
-    // İleride "sadece okunmamış bildirimleri getir" gibi özel filtreler buraya eklenebilir.
 }
