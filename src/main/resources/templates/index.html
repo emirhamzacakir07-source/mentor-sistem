@@ -189,6 +189,27 @@
         .alt-linkler a:hover {
             text-decoration: underline;
         }
+
+        .mentor-linki {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .mentor-linki a {
+            color: #10b981;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s;
+        }
+
+        .mentor-linki a:hover {
+            color: #059669;
+        }
     </style>
 </head>
 <body>
@@ -212,7 +233,6 @@
             </ul>
         </div>
 
-        <!-- YENİ EKLENEN KART -->
         <div class="bilgi-karti neon-turuncu">
             <h3><i class="fas fa-star"></i> ÖZEL REHBERLİK</h3>
             <ul>
@@ -240,6 +260,11 @@
         <div class="alt-linkler">
             <a href="/register">Kayıt Ol</a> |
             <a href="/forgot-password">Şifremi Unuttum</a>
+        </div>
+
+        <!-- YENİ EKLENEN MENTÖR GİRİŞ LİNKİ -->
+        <div class="mentor-linki">
+            <a href="/mentor-login"><i class="fas fa-chalkboard-teacher"></i> Mentör Girişi</a>
         </div>
     </div>
 
