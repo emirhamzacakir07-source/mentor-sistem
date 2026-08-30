@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yönetici Paneli - Liderlik & Mentörlük Akademisi</title>
+    <title>Yönetici Paneli - Gençlik Akademisi</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -77,11 +77,12 @@
 <!-- SOL MENÜ -->
 <aside class="sidebar">
     <div class="sidebar-header">
-        <i class="fas fa-graduation-cap"></i> MentörPanel Pro
+        <i class="fas fa-graduation-cap"></i> Gençlik Akademisi
     </div>
     <ul class="sidebar-menu">
         <li class="active" onclick="degistirSekme('dashboard', this)"><i class="fas fa-chart-pie"></i> Genel Bakış</li>
         <li onclick="degistirSekme('sorular', this)"><i class="fas fa-question-circle"></i> Soru & Vazife Havuzu</li>
+        <li onclick="degistirSekme('cevaplar', this)"><i class="fas fa-file-signature"></i> Öğrenci Cevapları</li>
         <li onclick="degistirSekme('kullanicilar', this)"><i class="fas fa-users"></i> Öğrenci & Mentörler</li>
         <li onclick="degistirSekme('atamalar', this)"><i class="fas fa-exchange-alt"></i> Mentör Atamaları</li>
         <li onclick="degistirSekme('mesaj-log', this)"><i class="fas fa-search"></i> Sistem Mesaj Denetimi</li>
@@ -179,11 +180,11 @@
             </div>
         </div>
 
-        <!-- EKLENEN SORU VE VAZİFELER LİSTESİ (ÖNCEKİNDE EKSİK OLAN KISIM) -->
+        <!-- EKLENEN SORU VE VAZİFELER LİSTESİ VE SİLME BUTONLARI -->
         <div class="card">
             <div class="card-header"><i class="fas fa-list-ol"></i> Sistemdeki Sorular ve Vazifeler</div>
             <table class="data-table">
-                <tr><th>Kategori</th><th>Tür</th><th>İçerik</th><th>Maks. Puan</th></tr>
+                <tr><th>Kategori</th><th>Tür</th><th>İçerik</th><th>Maks. Puan</th><th>İşlem</th></tr>
                 <tr th:each="q : ${questions}">
                     <td th:text="${q.category}">Kategori</td>
                     <td>
@@ -192,9 +193,52 @@
                     </td>
                     <td th:text="${q.content}">Soru İçeriği...</td>
                     <td th:text="${q.maxPoints}">0</td>
+                    <td>
+                        <!-- SİLME BUTONU -->
+                        <form action="/admin/delete-question" method="POST" style="margin: 0; display: inline-block;">
+                            <input type="hidden" name="id" th:value="${q.id}">
+                            <button type="submit" class="btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="return confirm('Bu soruyu ve öğrencilerin bu soruya verdiği tüm cevapları silmek istediğinize emin misiniz?');">
+                                <i class="fas fa-trash"></i> Sil
+                            </button>
+                        </form>
+                    </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(questions)}">
-                    <td colspan="4" style="text-align:center; color:#94a3b8;">Henüz sisteme eklenmiş bir soru veya vazife yok.</td>
+                    <td colspan="5" style="text-align:center; color:#94a3b8;">Henüz sisteme eklenmiş bir soru veya vazife yok.</td>
+                </tr>
+            </table>
+        </div>
+    </section>
+
+    <!-- YENİ EKLENEN SEKME: ÖĞRENCİ CEVAPLARI VE YAPAY ZEKA NOTLARI -->
+    <section id="cevaplar" class="content-section">
+        <div class="card" style="border-top: 4px solid #10b981;">
+            <div class="card-header"><i class="fas fa-robot"></i> Öğrenci Cevapları ve Yapay Zeka Analizleri</div>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Öğrencilerin gönderdiği tüm cevaplar, yapay zekanın analiz notları ve mentörlerin verdiği puanlar burada listelenir.</p>
+
+            <table class="data-table">
+                <tr>
+                    <th>Öğrenci Adı</th>
+                    <th style="width: 25%;">Soru / Vazife Metni</th>
+                    <th style="width: 25%;">Öğrencinin Cevabı</th>
+                    <th>Yapay Zeka Notu</th>
+                    <th>Mentör Puanı</th>
+                </tr>
+                <tr th:each="ans : ${adminAnswers}">
+                    <td style="font-weight: bold;" th:text="${ans.studentName}"></td>
+                    <td th:text="${ans.questionContent}"></td>
+                    <td th:text="${ans.answerText}" style="font-style: italic;"></td>
+                    <td>
+                        <span th:if="${ans.aiNote != null}" class="badge badge-warning" th:text="${ans.aiNote}"></span>
+                        <span th:unless="${ans.aiNote != null}" style="color: #94a3b8; font-size:12px;">Bekleniyor...</span>
+                    </td>
+                    <td>
+                        <span th:if="${ans.mentorScore != null}" class="badge badge-mentor" th:text="${ans.mentorScore + ' / 100'}"></span>
+                        <span th:unless="${ans.mentorScore != null}" style="color: #ef4444; font-size:12px; font-weight: bold;">Puanlanmadı</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(adminAnswers)}">
+                    <td colspan="5" style="text-align:center; color:#94a3b8;">Sistemde henüz çözülmüş bir soru veya vazife bulunmuyor.</td>
                 </tr>
             </table>
         </div>
@@ -298,7 +342,7 @@
     <!-- 6. SEKME: ŞİFRE TALEPLERİ -->
     <section id="bildirimler" class="content-section">
         <div class="card" style="border-top: 4px solid #ef4444;">
-            <div class="card-header"><i class="fas fa-bell"></i> Şifre Sıfırlama Talepleri</div>
+            <div class="card-header"><i class="fas fa-bell"></i> Şifre Sıfırlama Talepleri & Yapay Zeka Duyuruları</div>
             <table class="data-table">
                 <tr><th>Tarih / Saat</th><th>Mesaj İçeriği</th></tr>
                 <tr th:each="notif : ${notifications}">

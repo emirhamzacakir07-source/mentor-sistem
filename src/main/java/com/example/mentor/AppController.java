@@ -22,9 +22,66 @@ public class AppController {
     @Autowired private NotificationRepository notificationRepository;
     @Autowired private MessageRepository messageRepository;
 
+    // --- GENEL GİRİŞ (Öğrenci ve Admin) ---
     @GetMapping("/")
     public String loginPage() { return "index"; }
 
+    @PostMapping("/login")
+    public String login(@RequestParam String username, @RequestParam String password, HttpSession session, Model model) {
+        User user = userRepository.findByUsernameAndPassword(username, password);
+        if (user != null) {
+            // YENİ: Mentörler ana sayfadan girmeye çalışırsa kendi sayfalarına yönlendiriyoruz
+            if ("MENTOR".equals(user.getRole())) {
+                model.addAttribute("error", "Mentör girişleri özel sayfadan yapılmaktadır. Lütfen 'Mentör Girişi' bağlantısını kullanın.");
+                return "index";
+            }
+
+            user.setLastLoginDate(LocalDateTime.now());
+            user.setInactiveWarningSent(false);
+            userRepository.save(user);
+
+            session.setAttribute("loggedInUserId", user.getId());
+            session.setAttribute("loggedInUserRole", user.getRole());
+            session.setAttribute("loggedInUsername", user.getUsername());
+
+            if (user.getRole().equals("ADMIN")) return "redirect:/admin";
+            else return "redirect:/student";
+        }
+        model.addAttribute("error", "Kullanıcı adı veya şifre hatalı!");
+        return "index";
+    }
+
+    // --- MENTÖR ÖZEL GİRİŞİ ---
+    @GetMapping("/mentor-login")
+    public String mentorLoginPage() {
+        return "mentor-login"; // templates klasöründe mentor-login.html olması gerekecek
+    }
+
+    @PostMapping("/mentor-login")
+    public String processMentorLogin(@RequestParam String username, @RequestParam String password, HttpSession session, Model model) {
+        User user = userRepository.findByUsernameAndPassword(username, password);
+
+        if (user != null && "MENTOR".equals(user.getRole())) {
+            if (!user.isApproved()) {
+                model.addAttribute("error", "Hesabınız henüz onaylanmamış. Lütfen yönetici onayını bekleyiniz.");
+                return "mentor-login";
+            }
+            user.setLastLoginDate(LocalDateTime.now());
+            user.setInactiveWarningSent(false);
+            userRepository.save(user);
+
+            session.setAttribute("loggedInUserId", user.getId());
+            session.setAttribute("loggedInUserRole", user.getRole());
+            session.setAttribute("loggedInUsername", user.getUsername());
+
+            return "redirect:/mentor";
+        }
+
+        model.addAttribute("error", "Kayıtlı mentör bulunamadı veya şifre hatalı!");
+        return "mentor-login";
+    }
+
+    // --- KAYIT İŞLEMLERİ ---
     @GetMapping("/register")
     public String registerPage() { return "register"; }
 
@@ -56,30 +113,6 @@ public class AppController {
         userRepository.save(user);
         model.addAttribute("success", true);
         return "mentor-register";
-    }
-
-    @PostMapping("/login")
-    public String login(@RequestParam String username, @RequestParam String password, HttpSession session, Model model) {
-        User user = userRepository.findByUsernameAndPassword(username, password);
-        if (user != null) {
-            if ("MENTOR".equals(user.getRole()) && !user.isApproved()) {
-                model.addAttribute("error", "Hesabınız henüz onaylanmamış. Lütfen bekleyiniz.");
-                return "index";
-            }
-            user.setLastLoginDate(LocalDateTime.now());
-            user.setInactiveWarningSent(false);
-            userRepository.save(user);
-
-            session.setAttribute("loggedInUserId", user.getId());
-            session.setAttribute("loggedInUserRole", user.getRole());
-            session.setAttribute("loggedInUsername", user.getUsername());
-
-            if (user.getRole().equals("ADMIN")) return "redirect:/admin";
-            else if (user.getRole().equals("MENTOR")) return "redirect:/mentor";
-            else return "redirect:/student";
-        }
-        model.addAttribute("error", "Kullanıcı adı veya şifre hatalı!");
-        return "index";
     }
 
     @GetMapping("/logout")
@@ -125,13 +158,31 @@ public class AppController {
         else return "redirect:/student";
     }
 
+    // --- ADMİN PANELİ VE İŞLEMLERİ ---
     @GetMapping("/admin")
     public String adminPanel(HttpSession session, Model model) {
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
+
         model.addAttribute("notifications", notificationRepository.findAll());
         model.addAttribute("questions", questionRepository.findAll());
-        model.addAttribute("answers", answerRepository.findAll());
         model.addAttribute("users", userRepository.findAll());
+
+        // Adminin cevapları görebilmesi için
+        List<Answer> allAnswers = (List<Answer>) answerRepository.findAll();
+        List<Map<String, Object>> adminAnswers = new ArrayList<>();
+        for (Answer ans : allAnswers) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", ans.getId());
+            User std = userRepository.findById(ans.getStudentId()).orElse(null);
+            map.put("studentName", std != null ? std.getFullName() : "Silinmiş Öğrenci");
+            Question q = questionRepository.findById(ans.getQuestionId()).orElse(null);
+            map.put("questionContent", q != null ? q.getContent() : "Silinmiş Soru");
+            map.put("answerText", ans.getAnswerText());
+            map.put("aiNote", ans.getAiNote());
+            map.put("mentorScore", ans.getMentorScore());
+            adminAnswers.add(map);
+        }
+        model.addAttribute("adminAnswers", adminAnswers);
 
         List<Message> allMessages = messageRepository.findAllByOrderBySentAtDesc();
         List<Map<String, Object>> adminMessages = new ArrayList<>();
@@ -220,6 +271,7 @@ public class AppController {
         return "redirect:/admin";
     }
 
+    // --- MENTÖR PANELİ ---
     @GetMapping("/mentor")
     public String mentorPanel(HttpSession session, Model model) {
         if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
@@ -288,6 +340,7 @@ public class AppController {
         return "redirect:/mentor";
     }
 
+    // --- ÖĞRENCİ PANELİ VE CEVAP GÖNDERME ---
     @GetMapping("/student")
     public String studentPanel(HttpSession session, Model model) {
         if (!"STUDENT".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
@@ -327,13 +380,26 @@ public class AppController {
     @PostMapping("/submit-answer")
     public String submitAnswer(@RequestParam Long questionId, @RequestParam String answerText, HttpSession session) {
         if (!"STUDENT".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
+
         Long studentId = (Long) session.getAttribute("loggedInUserId");
+        User student = userRepository.findById(studentId).orElse(null);
+
         Answer a = new Answer();
         a.setQuestionId(questionId);
         a.setAnswerText(answerText);
         a.setStudentId(studentId);
+
         a.setAiNote(aiService.analyzeText(answerText));
         answerRepository.save(a);
+
+        // Öğrenci soru çözdüğünde yapay zeka sisteme otomatik bildirim (duyuru) atıyor
+        if (student != null) {
+            Notification n = new Notification();
+            n.setMessage("🤖 SİSTEM BİLDİRİMİ: " + student.getFullName() + " isimli öğrenci yeni bir soru/vazife yanıtladı.");
+            n.setCreatedAt(LocalDateTime.now());
+            notificationRepository.save(n);
+        }
+
         return "redirect:/student";
     }
 }

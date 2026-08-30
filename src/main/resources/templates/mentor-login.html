@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentör Girişi - Gençlik Akademisi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* GENEL AYARLAR */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
+        body {
+            background-color: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        }
+
+        /* GİRİŞ KARTI */
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border-top: 5px solid #10b981;
+        }
+
+        .login-card h2 { color: #0f172a; margin-bottom: 5px; font-size: 22px; }
+        .icon-wrapper { font-size: 45px; color: #10b981; margin-bottom: 15px; }
+        .subtitle { font-size: 13px; color: #64748b; margin-bottom: 25px; }
+
+        /* HATA MESAJI */
+        .error-message {
+            background: #fee2e2;
+            color: #ef4444;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            border: 1px solid #f87171;
+        }
+
+        /* FORM ELEMANLARI */
+        form { display: flex; flex-direction: column; gap: 15px; }
+
+        .input-group { position: relative; }
+        .input-group i { position: absolute; left: 15px; top: 15px; color: #94a3b8; }
+
+        input {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+        }
+        input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+
+        button {
+            padding: 14px;
+            background-color: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 5px;
+        }
+        button:hover { background-color: #059669; }
+
+        /* ALT LİNKLER */
+        .links { margin-top: 25px; display: flex; flex-direction: column; gap: 12px; font-size: 13px; }
+        .links a { color: #3b82f6; text-decoration: none; font-weight: 500; transition: 0.2s; }
+        .links a:hover { color: #2563eb; text-decoration: underline; }
+        .back-link { color: #64748b !important; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .back-link:hover { color: #0f172a !important; text-decoration: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="icon-wrapper">
+        <i class="fas fa-chalkboard-teacher"></i>
+    </div>
+    <h2>Mentör Girişi</h2>
+    <p class="subtitle">Gençlik Akademisi Mentör Yönetim Paneli</p>
+
+    <!-- HATA MESAJI (Eğer şifre yanlışsa veya onaylanmamışsa çıkar) -->
+    <div th:if="${error}" class="error-message">
+        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+    </div>
+
+    <!-- GİRİŞ FORMU -->
+    <form action="/mentor-login" method="POST">
+        <div class="input-group">
+            <i class="fas fa-user"></i>
+            <input type="text" name="username" placeholder="Kullanıcı Adınız" required>
+        </div>
+
+        <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input type="password" name="password" placeholder="Şifreniz" required>
+        </div>
+
+        <button type="submit">Sisteme Giriş Yap <i class="fas fa-arrow-right" style="margin-left: 5px;"></i></button>
+    </form>
+
+    <!-- YÖNLENDİRME LİNKLERİ -->
+    <div class="links">
+        <a href="/mentor-register"><i class="fas fa-user-plus"></i> Henüz hesabınız yok mu? Mentör Başvurusu Yapın</a>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 5px 0;">
+        <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Öğrenci / Yönetici Girişine Dön</a>
+    </div>
+</div>
+
+</body>
+</html>
