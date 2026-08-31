@@ -30,7 +30,6 @@ public class AppController {
     public String login(@RequestParam String username, @RequestParam String password, HttpSession session, Model model) {
         User user = userRepository.findByUsernameAndPassword(username, password);
         if (user != null) {
-            // YENİ: Mentörler ana sayfadan girmeye çalışırsa kendi sayfalarına yönlendiriyoruz
             if ("MENTOR".equals(user.getRole())) {
                 model.addAttribute("error", "Mentör girişleri özel sayfadan yapılmaktadır. Lütfen 'Mentör Girişi' bağlantısını kullanın.");
                 return "index";
@@ -54,7 +53,7 @@ public class AppController {
     // --- MENTÖR ÖZEL GİRİŞİ ---
     @GetMapping("/mentor-login")
     public String mentorLoginPage() {
-        return "mentor-login"; // templates klasöründe mentor-login.html olması gerekecek
+        return "mentor-login";
     }
 
     @PostMapping("/mentor-login")
@@ -167,7 +166,6 @@ public class AppController {
         model.addAttribute("questions", questionRepository.findAll());
         model.addAttribute("users", userRepository.findAll());
 
-        // Adminin cevapları görebilmesi için
         List<Answer> allAnswers = (List<Answer>) answerRepository.findAll();
         List<Map<String, Object>> adminAnswers = new ArrayList<>();
         for (Answer ans : allAnswers) {
@@ -201,16 +199,18 @@ public class AppController {
         return "admin";
     }
 
+    // İŞTE DÜZELTİLEN VE SİSTEMİ ÇÖKERTMEKTEN KURTARAN METOT
     @PostMapping("/add-question")
     public String addQuestion(
             @RequestParam(required = false) Long id,
             @RequestParam String content, @RequestParam String type,
             @RequestParam(required = false, defaultValue = "false") boolean isTask,
-            @RequestParam(required = false) String category, @RequestParam(required = false) Integer maxPoints,
-            @RequestParam(required = false) String optionA_text, @RequestParam(required = false) Integer optionA_point,
-            @RequestParam(required = false) String optionB_text, @RequestParam(required = false) Integer optionB_point,
-            @RequestParam(required = false) String optionC_text, @RequestParam(required = false) Integer optionC_point,
-            @RequestParam(required = false) String optionD_text, @RequestParam(required = false) Integer optionD_point,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String maxPoints, // Integer yerine String aldık
+            @RequestParam(required = false) String optionA_text, @RequestParam(required = false) String optionA_point,
+            @RequestParam(required = false) String optionB_text, @RequestParam(required = false) String optionB_point,
+            @RequestParam(required = false) String optionC_text, @RequestParam(required = false) String optionC_point,
+            @RequestParam(required = false) String optionD_text, @RequestParam(required = false) String optionD_point,
             @RequestParam(required = false, defaultValue = "false") boolean allowMultipleSelections,
             HttpSession session) {
 
@@ -223,16 +223,29 @@ public class AppController {
             q = new Question();
         }
 
-        q.setContent(content); q.setType(type); q.setTask(isTask); q.setCategory(category); q.setMaxPoints(maxPoints);
+        q.setContent(content); q.setType(type); q.setTask(isTask); q.setCategory(category);
         q.setAllowMultipleSelections(allowMultipleSelections);
 
+        // Boş bırakılırsa çökmeyi engelleyen güvenli çevirici
+        try { q.setMaxPoints((maxPoints != null && !maxPoints.trim().isEmpty()) ? Integer.parseInt(maxPoints) : 0); } catch (Exception e) { q.setMaxPoints(0); }
+
         if ("COKTAN_SECMELI".equals(type)) {
-            q.setOptionA(optionA_text); q.setOptionAPoint(optionA_point);
-            q.setOptionB(optionB_text); q.setOptionBPoint(optionB_point);
-            q.setOptionC(optionC_text); q.setOptionCPoint(optionC_point);
-            q.setOptionD(optionD_text); q.setOptionDPoint(optionD_point);
+            q.setOptionA(optionA_text);
+            try { q.setOptionAPoint((optionA_point != null && !optionA_point.trim().isEmpty()) ? Integer.parseInt(optionA_point) : 0); } catch (Exception e) { q.setOptionAPoint(0); }
+
+            q.setOptionB(optionB_text);
+            try { q.setOptionBPoint((optionB_point != null && !optionB_point.trim().isEmpty()) ? Integer.parseInt(optionB_point) : 0); } catch (Exception e) { q.setOptionBPoint(0); }
+
+            q.setOptionC(optionC_text);
+            try { q.setOptionCPoint((optionC_point != null && !optionC_point.trim().isEmpty()) ? Integer.parseInt(optionC_point) : 0); } catch (Exception e) { q.setOptionCPoint(0); }
+
+            q.setOptionD(optionD_text);
+            try { q.setOptionDPoint((optionD_point != null && !optionD_point.trim().isEmpty()) ? Integer.parseInt(optionD_point) : 0); } catch (Exception e) { q.setOptionDPoint(0); }
         } else {
-            q.setOptionA(null); q.setOptionB(null); q.setOptionC(null); q.setOptionD(null);
+            q.setOptionA(null); q.setOptionAPoint(0);
+            q.setOptionB(null); q.setOptionBPoint(0);
+            q.setOptionC(null); q.setOptionCPoint(0);
+            q.setOptionD(null); q.setOptionDPoint(0);
         }
         questionRepository.save(q);
         return "redirect:/admin";
@@ -392,7 +405,6 @@ public class AppController {
         a.setAiNote(aiService.analyzeText(answerText));
         answerRepository.save(a);
 
-        // Öğrenci soru çözdüğünde yapay zeka sisteme otomatik bildirim (duyuru) atıyor
         if (student != null) {
             Notification n = new Notification();
             n.setMessage("🤖 SİSTEM BİLDİRİMİ: " + student.getFullName() + " isimli öğrenci yeni bir soru/vazife yanıtladı.");
