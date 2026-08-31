@@ -47,11 +47,17 @@
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
 
-        <!-- YENİ EKLENEN POSTGRESQL KALICI VERİTABANI SÜRÜCÜSÜ -->
+        <!-- POSTGRESQL KALICI VERİTABANI SÜRÜCÜSÜ -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
+        </dependency>
+
+        <!-- YENİ EKLENEN: Oturumları (Girişleri) Veritabanında Kalıcı Tutmak İçin -->
+        <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session-jdbc</artifactId>
         </dependency>
 
         <!-- H2 Veritabanı -->
