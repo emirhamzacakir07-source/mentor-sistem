@@ -12,17 +12,21 @@ public class Answer {
     private Long studentId;
     private Long questionId;
 
+    // YENİ EKLENEN: Öğrencinin seçtiği şıklar (Örn: "A", "A,C" gibi virgülle ayrılarak tutulacak)
+    private String selectedOptions;
+
     // Uzun cevaplarda veritabanının hata vermemesi için TEXT tipi belirlendi.
     @Column(columnDefinition = "TEXT")
     private String answerText;
 
     private String aiNote;
 
-    // --- YENİ EKLENEN: MENTÖR DEĞERLENDİRME ALANLARI ---
-    private Integer mentorScore; // Mentörün vereceği 0-100 arası puan
+    // --- MENTÖR VE SİSTEM DEĞERLENDİRME ALANLARI ---
+    // Şıklı sorularda sistem buraya otomatik puan yazacak. Klasiklerde mentör elle girecek.
+    private Integer mentorScore;
 
     @Column(columnDefinition = "TEXT")
-    private String mentorFeedback; // Mentörün öğrenciye yazacağı mesaj (Uzun olabileceği için TEXT yapıldı)
+    private String mentorFeedback;
 
     // --- GETTER VE SETTER METOTLARI ---
 
@@ -35,13 +39,16 @@ public class Answer {
     public Long getQuestionId() { return questionId; }
     public void setQuestionId(Long questionId) { this.questionId = questionId; }
 
+    // Yeni Eklenen Seçili Şıklar Getter/Setter'ı
+    public String getSelectedOptions() { return selectedOptions; }
+    public void setSelectedOptions(String selectedOptions) { this.selectedOptions = selectedOptions; }
+
     public String getAnswerText() { return answerText; }
     public void setAnswerText(String answerText) { this.answerText = answerText; }
 
     public String getAiNote() { return aiNote; }
     public void setAiNote(String aiNote) { this.aiNote = aiNote; }
 
-    // Yeni Eklenenlerin Getter/Setter'ları
     public Integer getMentorScore() { return mentorScore; }
     public void setMentorScore(Integer mentorScore) { this.mentorScore = mentorScore; }
 

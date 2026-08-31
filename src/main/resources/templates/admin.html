@@ -70,6 +70,28 @@
         .badge-mentor { background: #dcfce7; color: #15803d; }
         .badge-student { background: #e0e7ff; color: #4338ca; }
         .badge-warning { background: #fef3c7; color: #d97706; }
+
+        /* ÇOKLU SEÇİM KUTUCUĞU STİLİ */
+        .coklu-secim-kutusu {
+            background: #e0f2fe;
+            border: 1px solid #7dd3fc;
+            padding: 12px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .coklu-secim-kutusu input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .coklu-secim-kutusu label {
+            color: #0369a1;
+            font-size: 14px;
+            margin: 0;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -146,6 +168,12 @@
                     <!-- ŞIKLARA ÖZEL PUANLAMA ALANI -->
                     <div id="siklarAlani" class="secenekler-alani">
                         <label style="color:#0f172a; border-bottom:1px solid #ccc; padding-bottom:5px;">Şıkları ve Her Şıkkın Puan Değerini Giriniz:</label>
+
+                        <!-- YENİ EKLENEN: ÇOKLU SEÇİM AYARI KUTUCUĞU -->
+                        <div class="coklu-secim-kutusu">
+                            <input type="checkbox" name="allowMultipleSelections" value="true" id="cokluSecim">
+                            <label for="cokluSecim">Öğrenci birden fazla şıkkı (Örn: A ve C) aynı anda seçebilsin.</label>
+                        </div>
 
                         <div class="sik-satiri"><span style="font-weight:bold;">A)</span><input type="text" name="optionA_text" placeholder="A şıkkı metni"><input type="number" name="optionA_point" placeholder="Puanı"></div>
                         <div class="sik-satiri"><span style="font-weight:bold;">B)</span><input type="text" name="optionB_text" placeholder="B şıkkı metni"><input type="number" name="optionB_point" placeholder="Puanı"></div>

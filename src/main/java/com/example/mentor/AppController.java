@@ -199,14 +199,13 @@ public class AppController {
         return "admin";
     }
 
-    // İŞTE DÜZELTİLEN VE SİSTEMİ ÇÖKERTMEKTEN KURTARAN METOT
     @PostMapping("/add-question")
     public String addQuestion(
             @RequestParam(required = false) Long id,
             @RequestParam String content, @RequestParam String type,
             @RequestParam(required = false, defaultValue = "false") boolean isTask,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) String maxPoints, // Integer yerine String aldık
+            @RequestParam(required = false) String maxPoints,
             @RequestParam(required = false) String optionA_text, @RequestParam(required = false) String optionA_point,
             @RequestParam(required = false) String optionB_text, @RequestParam(required = false) String optionB_point,
             @RequestParam(required = false) String optionC_text, @RequestParam(required = false) String optionC_point,
@@ -226,7 +225,6 @@ public class AppController {
         q.setContent(content); q.setType(type); q.setTask(isTask); q.setCategory(category);
         q.setAllowMultipleSelections(allowMultipleSelections);
 
-        // Boş bırakılırsa çökmeyi engelleyen güvenli çevirici
         try { q.setMaxPoints((maxPoints != null && !maxPoints.trim().isEmpty()) ? Integer.parseInt(maxPoints) : 0); } catch (Exception e) { q.setMaxPoints(0); }
 
         if ("COKTAN_SECMELI".equals(type)) {
@@ -390,19 +388,53 @@ public class AppController {
         return "student";
     }
 
+    // İŞTE YEPYENİ AKILLI CEVAPLAMA VE OTOMATİK PUANLAMA METODU
     @PostMapping("/submit-answer")
-    public String submitAnswer(@RequestParam Long questionId, @RequestParam String answerText, HttpSession session) {
+    public String submitAnswer(
+            @RequestParam Long questionId,
+            @RequestParam(required = false) String answerText,
+            @RequestParam(required = false) List<String> selectedOptions, // Öğrencinin seçtiği şıkları liste olarak alıyoruz
+            HttpSession session) {
+
         if (!"STUDENT".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
 
         Long studentId = (Long) session.getAttribute("loggedInUserId");
         User student = userRepository.findById(studentId).orElse(null);
+        Question question = questionRepository.findById(questionId).orElse(null);
+
+        if (question == null) return "redirect:/student";
 
         Answer a = new Answer();
         a.setQuestionId(questionId);
-        a.setAnswerText(answerText);
         a.setStudentId(studentId);
+        a.setAnswerText(answerText != null ? answerText : "");
 
-        a.setAiNote(aiService.analyzeText(answerText));
+        // EĞER SORU ÇOKTAN SEÇMELİYSE: OTOMATİK PUAN HESAPLA!
+        if ("COKTAN_SECMELI".equals(question.getType())) {
+            int totalScore = 0;
+
+            if (selectedOptions != null && !selectedOptions.isEmpty()) {
+                // Şıkları veritabanına kaydet (Örn: "A,B" şeklinde)
+                a.setSelectedOptions(String.join(",", selectedOptions));
+
+                // Hangi şıklar seçildiyse onun puanını toplam puana ekle
+                if (selectedOptions.contains("A") && question.getOptionAPoint() != null) totalScore += question.getOptionAPoint();
+                if (selectedOptions.contains("B") && question.getOptionBPoint() != null) totalScore += question.getOptionBPoint();
+                if (selectedOptions.contains("C") && question.getOptionCPoint() != null) totalScore += question.getOptionCPoint();
+                if (selectedOptions.contains("D") && question.getOptionDPoint() != null) totalScore += question.getOptionDPoint();
+            } else {
+                a.setSelectedOptions("");
+            }
+
+            // Mentörün puan girmesini bekleme, otomatik hesaplanan puanı direkt kaydet!
+            a.setMentorScore(totalScore);
+
+        } else {
+            // Klasik soruysa mentörün puanlaması için şimdilik boş bırak (null)
+            a.setMentorScore(null);
+        }
+
+        a.setAiNote(aiService.analyzeText(answerText != null ? answerText : ""));
         answerRepository.save(a);
 
         if (student != null) {
