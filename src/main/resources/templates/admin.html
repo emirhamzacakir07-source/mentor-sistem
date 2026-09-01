@@ -6,14 +6,11 @@
     <title>Yönetici Paneli - Gençlik Akademisi</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- YENİ KAYIT 7: SweetAlert2 Kütüphanesi -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        /* GENEL AYARLAR */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
         body { display: flex; height: 100vh; background-color: #f4f7fa; color: #334155; overflow: hidden; }
 
-        /* SOL MENÜ (SIDEBAR) */
         .sidebar { width: 280px; background-color: #1e293b; color: #f8fafc; display: flex; flex-direction: column; transition: 0.3s; }
         .sidebar-header { padding: 25px 20px; font-size: 20px; font-weight: 700; color: #fff; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; }
         .sidebar-menu { list-style: none; padding: 20px 0; flex: 1; overflow-y: auto; }
@@ -23,28 +20,22 @@
         .sidebar-footer { padding: 20px; border-top: 1px solid #334155; }
         .sidebar-footer a { color: #ef4444; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 10px; }
 
-        /* ANA İÇERİK ALANI (MAIN CONTENT) */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-
-        /* ÜST BAR (TOPBAR) */
         .topbar { background: #ffffff; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; }
         .topbar h2 { font-size: 22px; color: #0f172a; }
         .admin-profile { display: flex; align-items: center; gap: 15px; font-weight: 600; }
 
-        /* DİNAMİK SEKMELER */
         .content-section { display: none; padding: 30px; animation: fadeIn 0.4s ease; }
         .content-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* KARTLAR VE IZGARA YAPISI */
         .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
         .card { background: #ffffff; border-radius: 10px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; margin-bottom: 25px; }
-        .card-header { font-size: 18px; font-weight: 600; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0; color: #1e293b; display: flex; align-items: center; gap: 10px; }
+        .card-header { font-size: 18px; font-weight: 600; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0; color: #1e293b; display: flex; align-items: center; gap: 10px; justify-content: space-between; }
 
-        /* FORMLAR */
         form { display: flex; flex-direction: column; gap: 15px; }
-        .form-row { display: flex; gap: 15px; }
-        .form-group { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .form-row { display: flex; gap: 15px; flex-wrap: wrap; }
+        .form-group { flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 200px; }
         label { font-weight: 600; font-size: 13px; color: #64748b; }
         input, select, textarea { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; transition: 0.2s; outline: none; }
         input:focus, select:focus, textarea:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
@@ -52,61 +43,44 @@
         button:hover { background-color: #2563eb; }
         button.btn-warning { background-color: #f59e0b; } button.btn-warning:hover { background-color: #d97706; }
         button.btn-danger { background-color: #ef4444; } button.btn-danger:hover { background-color: #dc2626; }
+        button.btn-purple { background-color: #8b5cf6; } button.btn-purple:hover { background-color: #7c3aed; }
 
-        /* ŞIK VE PUAN TABLOSU */
         .secenekler-alani { display: none; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px dashed #94a3b8; }
         .secenekler-alani.aktif { display: flex; flex-direction: column; gap: 15px; }
         .sik-satiri { display: flex; gap: 10px; align-items: center; }
         .sik-satiri input[type="text"] { flex: 3; }
         .sik-satiri input[type="number"] { flex: 1; }
 
-        /* TABLOLAR */
         .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
         .data-table th { background-color: #f1f5f9; color: #475569; font-weight: 600; }
         .data-table tr:hover { background-color: #f8fafc; }
 
-        /* ETİKETLER (Badge) */
         .badge { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
         .badge-admin { background: #fce7f3; color: #be185d; }
         .badge-mentor { background: #dcfce7; color: #15803d; }
         .badge-student { background: #e0e7ff; color: #4338ca; }
         .badge-warning { background: #fef3c7; color: #d97706; }
+        .badge-week { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
 
-        /* ÇOKLU SEÇİM KUTUCUĞU STİLİ */
-        .coklu-secim-kutusu {
-            background: #e0f2fe;
-            border: 1px solid #7dd3fc;
-            padding: 12px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .coklu-secim-kutusu input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-        .coklu-secim-kutusu label {
-            color: #0369a1;
-            font-size: 14px;
-            margin: 0;
-            cursor: pointer;
-        }
+        .coklu-secim-kutusu { background: #e0f2fe; border: 1px solid #7dd3fc; padding: 12px; border-radius: 6px; display: flex; align-items: center; gap: 10px; }
+        .coklu-secim-kutusu input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
+        .coklu-secim-kutusu label { color: #0369a1; font-size: 14px; margin: 0; cursor: pointer; font-weight: 600; }
+
+        .hafta-filtre-alani { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 10px 15px; border-radius: 8px; border: 1px solid #cbd5e1; }
+        .hafta-filtre-alani select { width: 150px; padding: 8px; }
     </style>
 </head>
 <body>
 
-<!-- SOL MENÜ -->
 <aside class="sidebar">
-    <div class="sidebar-header">
-        <i class="fas fa-graduation-cap"></i> Gençlik Akademisi
-    </div>
+    <div class="sidebar-header"><i class="fas fa-graduation-cap"></i> Gençlik Akademisi</div>
     <ul class="sidebar-menu">
         <li class="active" onclick="degistirSekme('dashboard', this)"><i class="fas fa-chart-pie"></i> Genel Bakış</li>
         <li onclick="degistirSekme('sorular', this)"><i class="fas fa-question-circle"></i> Soru & Vazife Havuzu</li>
         <li onclick="degistirSekme('cevaplar', this)"><i class="fas fa-file-signature"></i> Öğrenci Cevapları</li>
+        <!-- YENİ EKLENEN SEKME: Mentör Sınıf Takibi -->
+        <li onclick="degistirSekme('mentor-siniflari', this)"><i class="fas fa-chalkboard-teacher"></i> Mentör ve Sınıfları</li>
         <li onclick="degistirSekme('kullanicilar', this)"><i class="fas fa-users"></i> Öğrenci & Mentörler</li>
         <li onclick="degistirSekme('atamalar', this)"><i class="fas fa-exchange-alt"></i> Mentör Atamaları</li>
         <li onclick="degistirSekme('mesaj-log', this)"><i class="fas fa-search"></i> Sistem Mesaj Denetimi</li>
@@ -117,9 +91,7 @@
     </div>
 </aside>
 
-<!-- ANA İÇERİK -->
 <main class="main-content">
-    <!-- ÜST BAR -->
     <header class="topbar">
         <h2 id="sayfaBasligi">Genel Bakış</h2>
         <div class="admin-profile">
@@ -131,14 +103,50 @@
     <!-- 1. SEKME: DASHBOARD -->
     <section id="dashboard" class="content-section active">
         <div class="grid-layout">
+
             <div class="card" style="border-top: 4px solid #10b981;">
                 <div class="card-header"><i class="fas fa-info-circle"></i> Sistem Özeti</div>
-                <p>Sistem şu anda canlı! Veritabanındaki tüm kayıtlar aktif olarak sayfalara yansımaktadır. Sol menüyü kullanarak işlemlere başlayabilirsiniz.</p>
+                <p>Sistem şu anda canlı! Sol menüyü kullanarak işlemlere başlayabilirsiniz.</p>
+
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e2e8f0;">
+
+                <h4 style="color: #ef4444; margin-bottom: 10px; font-size: 15px;"><i class="fas fa-exclamation-triangle"></i> Yeni Aya Geçiş (Puan Sıfırlama)</h4>
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 15px;">Ayın ödüllerini yandaki tablodan bakarak dağıttıktan sonra, yarışmayı sıfırlayıp yeni aya başlamak için bu butonu kullanın. (Geçmiş cevaplar, vazifeler ve metinler silinmez, sadece liderlik puanlaması 0'lanır).</p>
+
+                <form action="/admin/reset-monthly-scores" method="POST">
+                    <button type="submit" class="btn-danger" style="width: 100%;" onclick="return confirm('DİKKAT: Tüm öğrencilerin bu ayki yarışma puanları sıfırlanacaktır. Bu işlem geri alınamaz. Emin misiniz?');">
+                        <i class="fas fa-calendar-times"></i> Ayı Kapat ve Puanları Sıfırla
+                    </button>
+                </form>
             </div>
+
+            <!-- YENİ: LİDERLİK TABLOSU -->
+            <div class="card" style="border-top: 4px solid #f59e0b;">
+                <div class="card-header"><i class="fas fa-trophy" style="color: #f59e0b;"></i> Bu Ayın Sıralaması (Liderlik)</div>
+                <table class="data-table">
+                    <tr>
+                        <th>Sıra</th>
+                        <th>Öğrenci Adı</th>
+                        <th>Bu Ayki Puanı</th>
+                    </tr>
+                    <!-- Döngü: Puanlara göre büyükten küçüğe sıralanmış liste -->
+                    <tr th:each="leader, iterStat : ${leaderboard}">
+                        <td>
+                            <strong th:text="${iterStat.count}" th:style="${iterStat.count == 1 ? 'color:#f59e0b; font-size:18px;' : ''}"></strong>
+                        </td>
+                        <td th:text="${leader.studentName}" style="font-weight: 600;"></td>
+                        <td><span class="badge badge-mentor" th:text="${leader.score} + ' Puan'"></span></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(leaderboard)}">
+                        <td colspan="3" style="text-align:center; color:#94a3b8;">Henüz puan alan öğrenci yok.</td>
+                    </tr>
+                </table>
+            </div>
+
         </div>
     </section>
 
-    <!-- 2. SEKME: SORU VE VAZİFE HAVUZU -->
+    <!-- SORU VE VAZİFE HAVUZU -->
     <section id="sorular" class="content-section">
         <div class="grid-layout">
             <!-- SORU EKLEME -->
@@ -148,15 +156,23 @@
                     <input type="hidden" name="isTask" value="false">
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Soru Türü:</label>
-                            <select name="type" id="soruTuruSecimi" onchange="turKontrolEt()" required>
-                                <option value="KLASIK">Klasik (Açık Uçlu)</option>
-                                <option value="COKTAN_SECMELI">Şıklı (Seçeneklere Özel Puanlı)</option>
+                            <label>Kaçıncı Hafta?</label>
+                            <select name="weekNumber" required>
+                                <option value="1">1. Hafta</option><option value="2">2. Hafta</option>
+                                <option value="3">3. Hafta</option><option value="4">4. Hafta</option>
+                                <option value="5">5. Hafta</option><option value="6">6. Hafta</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Kategori / Ders:</label>
-                            <input type="text" name="category" placeholder="Örn: Java, LGS Matematik" required>
+                            <label>Soru Türü:</label>
+                            <select name="type" id="soruTuruSecimi" onchange="turKontrolEt()" required>
+                                <option value="KLASIK">Klasik (Açık Uçlu)</option>
+                                <option value="COKTAN_SECMELI">Şıklı (Puanlı)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Kategori:</label>
+                            <input type="text" name="category" placeholder="Örn: Matematik" required>
                         </div>
                         <div class="form-group">
                             <label>Maks. Puan:</label>
@@ -164,25 +180,25 @@
                         </div>
                     </div>
 
+                    <!-- YENİ: 8. Sınıf Onayı -->
+                    <div class="coklu-secim-kutusu" style="background:#fef2f2; border-color:#fca5a5;">
+                        <input type="checkbox" name="isEighthGradeOnly" value="true" id="sekizinciSinif">
+                        <label for="sekizinciSinif" style="color:#b91c1c;">Bu soru SADECE 8. Sınıf öğrencilerine gösterilsin.</label>
+                    </div>
+
                     <label>Soru Metni:</label>
                     <textarea name="content" rows="4" required></textarea>
 
-                    <!-- ŞIKLARA ÖZEL PUANLAMA ALANI -->
                     <div id="siklarAlani" class="secenekler-alani">
-                        <label style="color:#0f172a; border-bottom:1px solid #ccc; padding-bottom:5px;">Şıkları ve Her Şıkkın Puan Değerini Giriniz:</label>
-
-                        <!-- ÇOKLU SEÇİM AYARI KUTUCUĞU -->
                         <div class="coklu-secim-kutusu">
                             <input type="checkbox" name="allowMultipleSelections" value="true" id="cokluSecim">
-                            <label for="cokluSecim">Öğrenci birden fazla şıkkı (Örn: A ve C) aynı anda seçebilsin.</label>
+                            <label for="cokluSecim">Öğrenci birden fazla şık seçebilsin.</label>
                         </div>
-
-                        <div class="sik-satiri"><span style="font-weight:bold;">A)</span><input type="text" name="optionA_text" placeholder="A şıkkı metni"><input type="number" name="optionA_point" placeholder="Puanı"></div>
-                        <div class="sik-satiri"><span style="font-weight:bold;">B)</span><input type="text" name="optionB_text" placeholder="B şıkkı metni"><input type="number" name="optionB_point" placeholder="Puanı"></div>
-                        <div class="sik-satiri"><span style="font-weight:bold;">C)</span><input type="text" name="optionC_text" placeholder="C şıkkı metni"><input type="number" name="optionC_point" placeholder="Puanı"></div>
-                        <div class="sik-satiri"><span style="font-weight:bold;">D)</span><input type="text" name="optionD_text" placeholder="D şıkkı metni"><input type="number" name="optionD_point" placeholder="Puanı"></div>
+                        <div class="sik-satiri"><span style="font-weight:bold;">A)</span><input type="text" name="optionA_text" placeholder="A şıkkı"><input type="number" name="optionA_point" placeholder="Puan"></div>
+                        <div class="sik-satiri"><span style="font-weight:bold;">B)</span><input type="text" name="optionB_text" placeholder="B şıkkı"><input type="number" name="optionB_point" placeholder="Puan"></div>
+                        <div class="sik-satiri"><span style="font-weight:bold;">C)</span><input type="text" name="optionC_text" placeholder="C şıkkı"><input type="number" name="optionC_point" placeholder="Puan"></div>
+                        <div class="sik-satiri"><span style="font-weight:bold;">D)</span><input type="text" name="optionD_text" placeholder="D şıkkı"><input type="number" name="optionD_point" placeholder="Puan"></div>
                     </div>
-
                     <button type="submit">Soruyu Veritabanına Kaydet</button>
                 </form>
             </div>
@@ -195,14 +211,22 @@
                     <input type="hidden" name="type" value="VAZIFE">
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Kategori/Sınıf:</label>
-                            <input type="text" name="category" placeholder="Örn: 9. Sınıflar" required>
+                            <label>Kaçıncı Hafta?</label>
+                            <select name="weekNumber" required>
+                                <option value="1">1. Hafta</option><option value="2">2. Hafta</option>
+                                <option value="3">3. Hafta</option><option value="4">4. Hafta</option>
+                            </select>
                         </div>
-                        <div class="form-group">
-                            <label>Görev Puanı:</label>
-                            <input type="number" name="maxPoints" required>
-                        </div>
+                        <div class="form-group"><label>Kategori:</label><input type="text" name="category" required></div>
+                        <div class="form-group"><label>Görev Puanı:</label><input type="number" name="maxPoints" required></div>
                     </div>
+
+                    <!-- YENİ: 8. Sınıf Onayı -->
+                    <div class="coklu-secim-kutusu" style="background:#fef2f2; border-color:#fca5a5; margin-bottom:15px;">
+                        <input type="checkbox" name="isEighthGradeOnly" value="true" id="sekizinciSinifVazife">
+                        <label for="sekizinciSinifVazife" style="color:#b91c1c;">Sadece 8. Sınıflar</label>
+                    </div>
+
                     <label>Vazife Detayı:</label>
                     <textarea name="content" rows="4" required></textarea>
                     <button type="submit" class="btn-warning">Vazifeyi Yayınla</button>
@@ -210,50 +234,54 @@
             </div>
         </div>
 
-        <!-- EKLENEN SORU VE VAZİFELER LİSTESİ VE SİLME BUTONLARI -->
+        <!-- HAFTALIK FİLTRELEME İLE SORU LİSTESİ -->
         <div class="card">
-            <div class="card-header"><i class="fas fa-list-ol"></i> Sistemdeki Sorular ve Vazifeler</div>
-            <table class="data-table">
-                <tr><th>Kategori</th><th>Tür</th><th>İçerik</th><th>Maks. Puan</th><th>İşlem</th></tr>
-                <tr th:each="q : ${questions}">
-                    <td th:text="${q.category}">Kategori</td>
+            <div class="card-header">
+                <span><i class="fas fa-list-ol"></i> Sistemdeki Sorular ve Vazifeler</span>
+
+                <div class="hafta-filtre-alani">
+                    <label style="margin:0;"><i class="fas fa-calendar-alt"></i> Hafta Filtresi:</label>
+                    <select id="haftaFiltresi" onchange="sorulariFiltrele()">
+                        <option value="TUMU">Tüm Haftaları Göster</option>
+                        <option value="1">1. Hafta</option>
+                        <option value="2">2. Hafta</option>
+                        <option value="3">3. Hafta</option>
+                        <option value="4">4. Hafta</option>
+                        <option value="5">5. Hafta</option>
+                    </select>
+                </div>
+            </div>
+
+            <table class="data-table" id="sorularTablosu">
+                <tr><th>Hafta</th><th>Kategori</th><th>Tür</th><th>İçerik</th><th>İşlem</th></tr>
+                <tr th:each="q : ${questions}" class="soru-satiri" th:attr="data-hafta=${q.weekNumber != null ? q.weekNumber : '1'}">
+                    <td><span class="badge badge-week" th:text="${q.weekNumber != null ? q.weekNumber + '. Hafta' : '1. Hafta'}"></span></td>
+                    <td>
+                        <span th:text="${q.category}"></span><br>
+                        <span th:if="${q.isEighthGradeOnly}" style="color:#ef4444; font-size:11px; font-weight:bold;">(Sadece 8. Sınıf)</span>
+                    </td>
                     <td>
                         <span th:if="${q.isTask}" class="badge badge-warning">Vazife</span>
                         <span th:unless="${q.isTask}" class="badge badge-student" th:text="${q.type}">Soru</span>
                     </td>
-                    <td th:text="${q.content}">Soru İçeriği...</td>
-                    <td th:text="${q.maxPoints}">0</td>
+                    <td th:text="${q.content}"></td>
                     <td>
-                        <!-- SİLME BUTONU -->
-                        <form action="/admin/delete-question" method="POST" style="margin: 0; display: inline-block;">
+                        <form action="/admin/delete-question" method="POST" style="margin: 0;">
                             <input type="hidden" name="id" th:value="${q.id}">
-                            <button type="submit" class="btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="return confirm('Bu soruyu ve öğrencilerin bu soruya verdiği tüm cevapları silmek istediğinize emin misiniz?');">
-                                <i class="fas fa-trash"></i> Sil
-                            </button>
+                            <button type="submit" class="btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="return confirm('Silmek istediğinize emin misiniz?');"><i class="fas fa-trash"></i> Sil</button>
                         </form>
                     </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(questions)}">
-                    <td colspan="5" style="text-align:center; color:#94a3b8;">Henüz sisteme eklenmiş bir soru veya vazife yok.</td>
                 </tr>
             </table>
         </div>
     </section>
 
-    <!-- ÖĞRENCİ CEVAPLARI VE YAPAY ZEKA NOTLARI -->
+    <!-- ÖĞRENCİ CEVAPLARI -->
     <section id="cevaplar" class="content-section">
         <div class="card" style="border-top: 4px solid #10b981;">
             <div class="card-header"><i class="fas fa-robot"></i> Öğrenci Cevapları ve Yapay Zeka Analizleri</div>
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Öğrencilerin gönderdiği tüm cevaplar, yapay zekanın analiz notları ve mentörlerin verdiği puanlar burada listelenir.</p>
-
             <table class="data-table">
-                <tr>
-                    <th>Öğrenci Adı</th>
-                    <th style="width: 25%;">Soru / Vazife Metni</th>
-                    <th style="width: 25%;">Öğrencinin Cevabı</th>
-                    <th>Yapay Zeka Notu</th>
-                    <th>Mentör Puanı</th>
-                </tr>
+                <tr><th>Öğrenci Adı</th><th style="width: 25%;">Soru / Vazife Metni</th><th style="width: 25%;">Öğrencinin Cevabı</th><th>Yapay Zeka Notu</th><th>Mentör Puanı</th></tr>
                 <tr th:each="ans : ${adminAnswers}">
                     <td style="font-weight: bold;" th:text="${ans.studentName}"></td>
                     <td th:text="${ans.questionContent}"></td>
@@ -267,25 +295,57 @@
                         <span th:unless="${ans.mentorScore != null}" style="color: #ef4444; font-size:12px; font-weight: bold;">Puanlanmadı</span>
                     </td>
                 </tr>
-                <tr th:if="${#lists.isEmpty(adminAnswers)}">
-                    <td colspan="5" style="text-align:center; color:#94a3b8;">Sistemde henüz çözülmüş bir soru veya vazife bulunmuyor.</td>
+            </table>
+        </div>
+    </section>
+
+    <!-- YENİ SEKME: MENTÖR VE SINIF TAKİBİ -->
+    <section id="mentor-siniflari" class="content-section">
+        <div class="card" style="border-top: 4px solid #8b5cf6;">
+            <div class="card-header">
+                <i class="fas fa-chalkboard-teacher"></i> Mentör Sınıf Performans Raporları
+            </div>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Hangi mentörün kaç öğrencisi var ve o sınıfın genel AI (Yapay Zeka) analizi nedir? Bu ekrandan kontrol edebilirsiniz.</p>
+
+            <table class="data-table">
+                <tr>
+                    <th>Mentör Adı</th>
+                    <th>Bölge / Uzmanlık</th>
+                    <th>Öğrenci Sayısı</th>
+                    <th style="width:40%;">Sınıf Genel Yapay Zeka Analizi</th>
+                </tr>
+                <tr th:each="mentor : ${users}" th:if="${mentor.role == 'MENTOR' and mentor.approved}">
+                    <td style="font-weight: bold; color: #4338ca;" th:text="${mentor.fullName}">Mentör Adı</td>
+                    <td th:text="${mentor.region != null ? mentor.region : 'Genel'}">Bölge</td>
+                    <td>
+                        <!-- Burada Thymeleaf Collection Selection ile sadece bu mentöre atanmış öğrencileri saydırıyoruz -->
+                        <span class="badge badge-student" style="font-size: 14px;"
+                              th:text="${#lists.size(users.?[role == 'STUDENT' and assignedMentorId == __${mentor.id}__])} + ' Öğrenci'">
+                        </span>
+                    </td>
+                    <td>
+                        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 13px; color: #475569;">
+                            <i class="fas fa-robot" style="color: #8b5cf6;"></i> Sistemsel analiz henüz çalıştırılmadı. Mentör panelinden tetiklendiğinde buraya düşecektir.
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(users.?[role == 'MENTOR' and approved])}">
+                    <td colspan="4" style="text-align:center; color:#94a3b8;">Sistemde onaylı mentör bulunamadı.</td>
                 </tr>
             </table>
         </div>
     </section>
 
-    <!-- 3. SEKME: KULLANICILAR VE MENTÖR ONAYLARI -->
+    <!-- KULLANICILAR -->
     <section id="kullanicilar" class="content-section">
-
         <div class="card" style="border-top: 4px solid #f59e0b; margin-bottom: 25px;">
             <div class="card-header"><i class="fas fa-user-clock"></i> Onay Bekleyen Mentör Başvuruları</div>
             <table class="data-table">
                 <tr><th>İsim Soyisim (Kullanıcı Adı)</th><th>Telefon</th><th>Bölge</th><th>İşlem</th></tr>
-
                 <tr th:each="user : ${users}" th:if="${user.role == 'MENTOR' and !user.approved}">
-                    <td th:text="${user.fullName} + ' (' + ${user.username} + ')'">Ad Soyad</td>
-                    <td th:text="${user.personalPhone}">Telefon</td>
-                    <td th:text="${user.region}">Bölge</td>
+                    <td th:text="${user.fullName} + ' (' + ${user.username} + ')'"></td>
+                    <td th:text="${user.personalPhone}"></td>
+                    <td th:text="${user.region}"></td>
                     <td>
                         <form action="/admin/approve-mentor" method="POST" style="margin: 0;">
                             <input type="hidden" name="mentor_id" th:value="${user.id}">
@@ -295,36 +355,24 @@
                 </tr>
             </table>
         </div>
-
         <div class="card">
             <div class="card-header"><i class="fas fa-id-card"></i> Sisteme Kayıtlı Aktif Kullanıcılar</div>
-            <!--
-                GÜVENLİK/GİZLİLİK DÜZELTMESİ:
-                Bu tabloda daha önce kullanıcıların şifreleri düz metin olarak
-                gösteriliyordu ("Şifre" sütunu). Bu hem güvenlik hem de (öğrenciler
-                küçük yaş grubunda olduğu için) gizlilik açısından ciddi bir risk
-                olduğundan sütun tamamen kaldırıldı.
-            -->
             <table class="data-table">
                 <tr><th>İsim Soyisim (Kullanıcı Adı)</th><th>Rol</th><th>Bölge / Kategori</th></tr>
-
                 <tr th:each="user : ${users}" th:if="${user.approved}">
-                    <td th:text="${user.fullName} + ' (' + ${user.username} + ')'">Ad Soyad</td>
+                    <td th:text="${user.fullName} + ' (' + ${user.username} + ')'"></td>
                     <td>
                         <span th:if="${user.role == 'ADMIN'}" class="badge badge-admin">Yönetici</span>
                         <span th:if="${user.role == 'MENTOR'}" class="badge badge-mentor">Mentör</span>
                         <span th:if="${user.role == 'STUDENT'}" class="badge badge-student">Öğrenci</span>
                     </td>
-                    <td th:text="${user.role == 'MENTOR' ? (user.region != null ? user.region : 'Genel') : (user.gradeClass != null ? user.gradeClass : 'Belirtilmemiş')}">Detay</td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(users)}">
-                    <td colspan="3" style="text-align:center; color:#94a3b8;">Sistemde kayıtlı aktif kullanıcı bulunmamaktadır.</td>
+                    <td th:text="${user.role == 'MENTOR' ? (user.region != null ? user.region : 'Genel') : (user.gradeClass != null ? user.gradeClass : 'Belirtilmemiş')}"></td>
                 </tr>
             </table>
         </div>
     </section>
 
-    <!-- 4. SEKME: ATAMALAR -->
+    <!-- ATAMALAR -->
     <section id="atamalar" class="content-section">
         <div class="card">
             <div class="card-header"><i class="fas fa-network-wired"></i> Öğrenci - Mentör Eşleştirmesi</div>
@@ -350,44 +398,30 @@
         </div>
     </section>
 
-    <!-- 5. SEKME: BİLDİRİMLER VE MESAJ LOGLARI -->
+    <!-- BİLDİRİMLER VE MESAJ LOGLARI -->
     <section id="mesaj-log" class="content-section">
         <div class="card" style="border-top: 4px solid #8b5cf6;">
-            <div class="card-header"><i class="fas fa-user-secret"></i> Platform İçi İletişim Logları (Denetim)</div>
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Sistemde gönderilen tüm özel mesajlar güvenlik ve kalite kontrol amacıyla aşağıda tarih sırasına göre listelenmektedir.</p>
-
+            <div class="card-header"><i class="fas fa-user-secret"></i> Platform İçi İletişim Logları</div>
             <table class="data-table">
-                <tr>
-                    <th>Tarih / Saat</th>
-                    <th>Kimden (Gönderen)</th>
-                    <th>Kime (Alıcı)</th>
-                    <th style="width: 40%;">Mesaj İçeriği</th>
-                </tr>
+                <tr><th>Tarih / Saat</th><th>Kimden</th><th>Kime</th><th style="width: 40%;">Mesaj İçeriği</th></tr>
                 <tr th:each="log : ${adminMessages}">
                     <td th:text="${#temporals.format(log.sentAt, 'dd.MM.yyyy HH:mm')}"></td>
                     <td style="font-weight: bold; color: #3b82f6;" th:text="${log.senderName}"></td>
                     <td style="font-weight: bold; color: #10b981;" th:text="${log.receiverName}"></td>
                     <td th:text="${log.content}" style="font-style: italic;"></td>
                 </tr>
-                <tr th:if="${#lists.isEmpty(adminMessages)}">
-                    <td colspan="4" style="text-align:center; color:#94a3b8;">Sistemde henüz kaydedilmiş bir mesaj logu bulunmuyor.</td>
-                </tr>
             </table>
         </div>
     </section>
 
-    <!-- 6. SEKME: ŞİFRE TALEPLERİ -->
     <section id="bildirimler" class="content-section">
         <div class="card" style="border-top: 4px solid #ef4444;">
-            <div class="card-header"><i class="fas fa-bell"></i> Şifre Sıfırlama Talepleri & Yapay Zeka Duyuruları</div>
+            <div class="card-header"><i class="fas fa-bell"></i> Şifre Talepleri & Duyurular</div>
             <table class="data-table">
                 <tr><th>Tarih / Saat</th><th>Mesaj İçeriği</th></tr>
                 <tr th:each="notif : ${notifications}">
-                    <td th:text="${#temporals.format(notif.createdAt, 'dd.MM.yyyy HH:mm')}">Tarih</td>
-                    <td th:text="${notif.message}" style="font-weight:500;">İçerik</td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(notifications)}">
-                    <td colspan="2" style="text-align:center; color:#94a3b8;">Şu an bekleyen herhangi bir sistem bildirimi yok.</td>
+                    <td th:text="${#temporals.format(notif.createdAt, 'dd.MM.yyyy HH:mm')}"></td>
+                    <td th:text="${notif.message}" style="font-weight:500;"></td>
                 </tr>
             </table>
         </div>
@@ -395,16 +429,12 @@
 
 </main>
 
-<!-- SEKME VE ARAYÜZ KONTROL SCRİPTİ -->
 <script>
     function turKontrolEt() {
         var secim = document.getElementById("soruTuruSecimi").value;
         var siklarAlani = document.getElementById("siklarAlani");
-        if (secim === "COKTAN_SECMELI") {
-            siklarAlani.classList.add("aktif");
-        } else {
-            siklarAlani.classList.remove("aktif");
-        }
+        if (secim === "COKTAN_SECMELI") siklarAlani.classList.add("aktif");
+        else siklarAlani.classList.remove("aktif");
     }
 
     function degistirSekme(sekmeId, menuElemani) {
@@ -419,33 +449,30 @@
 
         document.getElementById(sekmeId).classList.add('active');
     }
+
+    // YENİ: HAFTALIK SORU FİLTRELEME MANTIĞI
+    function sorulariFiltrele() {
+        var secilenHafta = document.getElementById("haftaFiltresi").value;
+        var satirlar = document.querySelectorAll(".soru-satiri");
+
+        satirlar.forEach(function(satir) {
+            var satirHaftasi = satir.getAttribute("data-hafta");
+
+            if (secilenHafta === "TUMU" || satirHaftasi === secilenHafta) {
+                satir.style.display = ""; // Göster
+            } else {
+                satir.style.display = "none"; // Gizle
+            }
+        });
+    }
 </script>
 
-<!-- SweetAlert2 Bildirim Kontrolü (Controller'dan gelen Flash Attribute mesajlarını yakalar) -->
 <script th:inline="javascript">
     /*<![CDATA[*/
     var successMessage = /*[[${successMessage}]]*/ null;
     var errorMsg = /*[[${error}]]*/ null;
-
-    if (successMessage) {
-        Swal.fire({
-            icon: 'success',
-            title: 'Başarılı!',
-            text: successMessage,
-            confirmButtonColor: '#3b82f6',
-            timer: 3000,
-            timerProgressBar: true
-        });
-    }
-
-    if (errorMsg) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Hata!',
-            text: errorMsg,
-            confirmButtonColor: '#ef4444'
-        });
-    }
+    if (successMessage) { Swal.fire({ icon: 'success', title: 'Başarılı!', text: successMessage, confirmButtonColor: '#3b82f6', timer: 3000, timerProgressBar: true }); }
+    if (errorMsg) { Swal.fire({ icon: 'error', title: 'Hata!', text: errorMsg, confirmButtonColor: '#ef4444' }); }
     /*]]>*/
 </script>
 

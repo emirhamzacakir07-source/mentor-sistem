@@ -1,6 +1,7 @@
 package com.example.mentor;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime; // YENİ EKLENEN: Zaman işlemleri için gerekli kütüphane
 
 @Entity
 @Table(name = "questions")
@@ -42,6 +43,15 @@ public class Question {
     // KAYIT 1 GÜNCELLEMESİ: boolean -> Boolean
     @Column(columnDefinition = "boolean default false")
     private Boolean allowMultipleSelections;
+
+    // --- YENİ EKLENEN ÖZELLİKLER (Zaman, Hafta ve 8. Sınıf) ---
+    private LocalDateTime createdAt; // 24 saat kuralı için oluşturulma zamanı
+
+    private Integer weekNumber; // 1, 2, 3 gibi haftalık arşiv sistemi için
+
+    @Column(columnDefinition = "boolean default false")
+    private Boolean isEighthGradeOnly; // Sadece 8. sınıflara özel filtre
+
 
     // --- GETTER VE SETTER METOTLARI ---
 
@@ -91,4 +101,14 @@ public class Question {
     // NullPointerException almamak için güvenli dönüş
     public Boolean isAllowMultipleSelections() { return allowMultipleSelections != null ? allowMultipleSelections : false; }
     public void setAllowMultipleSelections(Boolean allowMultipleSelections) { this.allowMultipleSelections = allowMultipleSelections; }
+
+    // --- YENİ EKLENENLERİN GETTER / SETTER'LARI ---
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Integer getWeekNumber() { return weekNumber; }
+    public void setWeekNumber(Integer weekNumber) { this.weekNumber = weekNumber; }
+
+    public Boolean isEighthGradeOnly() { return isEighthGradeOnly != null ? isEighthGradeOnly : false; }
+    public void setEighthGradeOnly(Boolean eighthGradeOnly) { this.isEighthGradeOnly = eighthGradeOnly; }
 }

@@ -6,175 +6,65 @@
     <title>Mentör Paneli - Liderlik Akademisi</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- YENİ KAYIT 7: SweetAlert2 Kütüphanesi Eklendi -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        /* GENEL AYARLAR (Admin paneliyle uyumlu ama Mentör renklerinde) */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
         body { display: flex; height: 100vh; background-color: #f8fafc; color: #334155; overflow: hidden; }
 
-        /* SOL MENÜ (Mentör Teması - Lacivert/Yeşil) */
-        .sidebar {
-            width: 280px;
-            background-color: #0f172a;
-            color: #f8fafc;
-            display: flex;
-            flex-direction: column;
-            transition: 0.3s;
-        }
-        .sidebar-header {
-            padding: 25px 20px;
-            font-size: 20px;
-            font-weight: 700;
-            color: #fff;
-            border-bottom: 1px solid #1e293b;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .sidebar { width: 280px; background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; transition: 0.3s; }
+        .sidebar-header { padding: 25px 20px; font-size: 20px; font-weight: 700; color: #fff; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 10px; }
         .sidebar-menu { list-style: none; padding: 20px 0; flex: 1; overflow-y: auto; }
-        .sidebar-menu li {
-            padding: 15px 25px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s;
-            border-left: 4px solid transparent;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: #cbd5e1;
-        }
+        .sidebar-menu li { padding: 15px 25px; font-size: 15px; font-weight: 500; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; display: flex; align-items: center; gap: 15px; color: #cbd5e1; }
         .sidebar-menu li:hover { background-color: #1e293b; color: #fff; border-left-color: #10b981; }
         .sidebar-menu li.active { background-color: #020617; color: #10b981; border-left-color: #10b981; font-weight: 600; }
         .sidebar-footer { padding: 20px; border-top: 1px solid #1e293b; }
         .sidebar-footer a { color: #ef4444; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 10px; }
 
-        /* ANA İÇERİK */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-
-        .topbar {
-            background: #ffffff;
-            padding: 20px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            z-index: 10;
-        }
+        .topbar { background: #ffffff; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; }
         .topbar h2 { font-size: 22px; color: #0f172a; }
         .mentor-profile { display: flex; align-items: center; gap: 15px; font-weight: 600; color: #10b981; }
 
-        /* SEKMELER VE KARTLAR */
         .content-section { display: none; padding: 30px; animation: fadeIn 0.4s ease; }
         .content-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card {
-            background: #ffffff;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.04);
-            border: 1px solid #e2e8f0;
-            margin-bottom: 25px;
-        }
-        .card-header {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e2e8f0;
-            color: #1e293b;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .card { background: #ffffff; border-radius: 10px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; margin-bottom: 25px; }
+        .card-header { font-size: 18px; font-weight: 600; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0; color: #1e293b; display: flex; align-items: center; gap: 10px; justify-content: space-between;}
 
-        /* TABLOLAR (Excel Görünümü) */
         .excel-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
         .excel-table th, .excel-table td { padding: 12px 15px; text-align: left; border: 1px solid #e2e8f0; }
         .excel-table th { background-color: #f1f5f9; color: #475569; font-weight: 700; position: sticky; top: 0; }
         .excel-table tr:hover { background-color: #f8fafc; }
 
-        /* FORMLAR VE BUTONLAR */
         form { display: flex; flex-direction: column; gap: 12px; }
-        textarea, input, select {
-            padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 14px;
-            width: 100%;
-            outline: none;
-        }
+        textarea, input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; outline: none; }
         textarea:focus, input:focus, select:focus { border-color: #10b981; }
 
-        button {
-            padding: 10px 15px;
-            font-weight: 600;
-            background-color: #10b981;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
+        button { padding: 10px 15px; font-weight: 600; background-color: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; }
         button:hover { background-color: #059669; }
 
-        /* ETİKETLER */
         .badge { padding: 5px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
         .badge-ai { background: #e0e7ff; color: #4338ca; }
         .badge-pending { background: #fee2e2; color: #dc2626; padding: 4px 8px; border-radius: 4px; font-size: 11px;}
         .badge-done { background: #dcfce7; color: #15803d; padding: 4px 8px; border-radius: 4px; font-size: 11px;}
 
-        .answer-box {
-            background: #f8fafc;
-            padding: 15px;
-            border-left: 4px solid #3b82f6;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            font-style: italic;
-        }
+        .answer-box { background: #f8fafc; padding: 15px; border-left: 4px solid #3b82f6; border-radius: 4px; margin-bottom: 10px; font-style: italic; }
 
-        /* CHAT ALANI */
-        .chat-box {
-            max-height: 400px;
-            overflow-y: auto;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .chat-msg {
-            padding: 10px 15px;
-            border-radius: 12px;
-            font-size: 14px;
-            max-width: 70%;
-        }
-        .msg-me {
-            background: #10b981;
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 2px;
-        }
-        .msg-other {
-            background: #e2e8f0;
-            color: #0f172a;
-            align-self: flex-start;
-            border-bottom-left-radius: 2px;
-        }
+        .chat-box { max-height: 400px; overflow-y: auto; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .chat-msg { padding: 10px 15px; border-radius: 12px; font-size: 14px; max-width: 70%; }
+        .msg-me { background: #10b981; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .msg-other { background: #e2e8f0; color: #0f172a; align-self: flex-start; border-bottom-left-radius: 2px; }
+
+        /* Yeni Hafta Filtresi Tasarımı */
+        .hafta-filtre-alani { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px; font-weight: normal;}
+        .hafta-filtre-alani select { width: 130px; padding: 6px; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<!-- SOL MENÜ -->
 <aside class="sidebar">
-    <div class="sidebar-header">
-        <i class="fas fa-chalkboard-teacher"></i> Mentör Paneli
-    </div>
+    <div class="sidebar-header"><i class="fas fa-chalkboard-teacher"></i> Mentör Paneli</div>
     <ul class="sidebar-menu">
         <li class="active" onclick="degistirSekme('dashboard', this)"><i class="fas fa-home"></i> Genel Bakış</li>
         <li onclick="degistirSekme('ogrencilerim', this)"><i class="fas fa-users"></i> Sınıfım & İletişim</li>
@@ -187,9 +77,7 @@
     </div>
 </aside>
 
-<!-- ANA İÇERİK -->
 <main class="main-content">
-    <!-- ÜST BAR -->
     <header class="topbar">
         <h2 id="sayfaBasligi">Genel Bakış</h2>
         <div class="mentor-profile">
@@ -198,18 +86,17 @@
         </div>
     </header>
 
-    <!-- 1. SEKME: DASHBOARD -->
     <section id="dashboard" class="content-section active">
         <div class="card" style="border-top: 4px solid #10b981;">
-            <div class="card-header"><i class="fas fa-hand-sparkles"></i> Hoş Geldiniz!</div>
+            <div class="card-header"><div><i class="fas fa-hand-sparkles"></i> Hoş Geldiniz!</div></div>
             <p>Güvenlik kuralları gereği telefon numaranız öğrencilerle paylaşılmaz. Öğrencilerinizle iletişim kurmak için sol menüdeki "Birebir Mesaj Kutusu" sekmesini kullanabilirsiniz.</p>
         </div>
     </section>
 
-    <!-- 2. SEKME: ÖĞRENCİLERİM (EXCEL GÖRÜNÜMÜ + AI RAPORU) -->
+    <!-- ÖĞRENCİLERİM VE YAPAY ZEKA RAPORU -->
     <section id="ogrencilerim" class="content-section">
         <div class="card">
-            <div class="card-header"><i class="fas fa-table"></i> Sınıf Listesi, İletişim ve AI Gelişim Raporları</div>
+            <div class="card-header"><div><i class="fas fa-table"></i> Sınıf Listesi, İletişim ve AI Gelişim Raporları</div></div>
             <div style="overflow-x: auto;">
                 <table class="excel-table">
                     <tr>
@@ -221,13 +108,12 @@
                         <th>Yapay Zeka Karnesi</th>
                     </tr>
                     <tr th:each="std : ${myStudents}">
-                        <td th:text="${std.fullName}">Ad Soyad</td>
-                        <td th:text="${std.school}">Okul</td>
-                        <td th:text="${std.gradeClass}">Sınıf</td>
-                        <td th:text="${std.personalPhone}">Tel</td>
-                        <td th:text="${std.parentPhone}">Veli Tel</td>
+                        <td th:text="${std.fullName}"></td>
+                        <td th:text="${std.school}"></td>
+                        <td th:text="${std.gradeClass}"></td>
+                        <td th:text="${std.personalPhone}"></td>
+                        <td th:text="${std.parentPhone}"></td>
                         <td>
-                            <!-- GÜVENLİK GÜNCELLEMESİ -->
                             <form th:action="@{/mentor/ai-report}" method="POST" style="margin: 0;">
                                 <input type="hidden" name="studentId" th:value="${std.id}">
                                 <button type="submit" style="padding: 6px 12px; font-size: 11px; background-color: #6366f1;">
@@ -244,35 +130,47 @@
         </div>
     </section>
 
-    <!-- 3. SEKME: CEVAPLAR VE DEĞERLENDİRME -->
+    <!-- CEVAPLAR VE NOTLANDIRMA (YENİ HAFTALIK FİLTRE İLE) -->
     <section id="degerlendirme" class="content-section">
         <div class="card" style="border-top: 4px solid #3b82f6;">
-            <div class="card-header"><i class="fas fa-glasses"></i> Öğrenci Cevapları ve Notlandırma</div>
+            <div class="card-header">
+                <div><i class="fas fa-glasses"></i> Öğrenci Cevapları ve Notlandırma</div>
+                <!-- YENİ EKLENEN HAFTA FİLTRESİ -->
+                <div class="hafta-filtre-alani">
+                    <label style="margin:0;"><i class="fas fa-calendar-alt"></i> Hafta:</label>
+                    <select id="haftaFiltresiMentor" onchange="cevaplariFiltrele()">
+                        <option value="TUMU">Tüm Zamanlar (Karışık)</option>
+                        <option value="1">1. Hafta Cevapları</option>
+                        <option value="2">2. Hafta Cevapları</option>
+                        <option value="3">3. Hafta Cevapları</option>
+                        <option value="4">4. Hafta Cevapları</option>
+                        <option value="5">5. Hafta Cevapları</option>
+                    </select>
+                </div>
+            </div>
+
             <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">* Öğrencilerinizin gönderdiği cevapları inceleyip onlara sistem üzerinden geri bildirim verebilirsiniz.</p>
 
-            <div th:each="ans : ${studentAnswers}" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; background: #fff;">
-
+            <div th:each="ans : ${studentAnswers}" class="cevap-kutusu" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; background: #fff;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
                     <strong style="color: #0f172a;"><i class="fas fa-user-graduate"></i> <span th:text="${ans.studentName}">Öğrenci Adı</span></strong>
-
                     <span th:if="${ans.mentorFeedback == null}" class="badge-pending">Yeni Cevap (Bekliyor)</span>
                     <span th:if="${ans.mentorFeedback != null}" class="badge-done"><i class="fas fa-check"></i> Geri Bildirim Verildi</span>
                 </div>
 
                 <div style="font-size: 14px; color: #475569; margin-bottom: 10px;">
-                    <strong>Soru/Vazife:</strong> <span th:text="${ans.questionContent}">Soru içeriği buraya gelecek...</span>
+                    <strong>Soru/Vazife Metni:</strong> <span th:text="${ans.questionContent}"></span>
                 </div>
 
                 <div class="answer-box">
-                    <strong>Öğrencinin Cevabı:</strong> <br>
-                    <span th:text="${ans.answerText}">Öğrencinin yazdığı cevap metni...</span>
+                    <strong>Öğrencinin Cevabı / Notu:</strong> <br>
+                    <span th:text="${ans.answerText}"></span>
                 </div>
 
                 <div style="font-size: 12px; margin-bottom: 15px;">
                     <span class="badge badge-ai"><i class="fas fa-robot"></i> Yapay Zeka Notu: <span th:text="${ans.aiNote}">Analiz</span></span>
                 </div>
 
-                <!-- GÜVENLİK GÜNCELLEMESİ -->
                 <form th:action="@{/mentor/submit-feedback}" method="POST" style="background: #f8fafc; padding: 15px; border-radius: 6px; flex-direction: row; align-items: center;">
                     <input type="hidden" name="answerId" th:value="${ans.id}">
                     <input type="number" name="mentorScore" placeholder="Puan (0-100)" style="width: 120px;" required>
@@ -287,23 +185,18 @@
         </div>
     </section>
 
-    <!-- 4. SEKME: MESAJLAŞMA -->
+    <!-- MESAJLAŞMA -->
     <section id="mesajlar" class="content-section">
         <div class="card" style="border-top: 4px solid #8b5cf6;">
-            <div class="card-header"><i class="fas fa-envelope-open-text"></i> Öğrenci Mesajları</div>
-
+            <div class="card-header"><div><i class="fas fa-envelope-open-text"></i> Öğrenci Mesajları</div></div>
             <div class="chat-box">
                 <div th:each="msg : ${chatMessages}" th:class="${msg.isMine ? 'chat-msg msg-me' : 'chat-msg msg-other'}">
                     <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px;" th:text="${msg.isMine ? 'Siz' : msg.otherUserName}"></div>
                     <span th:text="${msg.content}"></span>
                     <div style="font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: right;" th:text="${#temporals.format(msg.sentAt, 'HH:mm')}"></div>
                 </div>
-                <div th:if="${#lists.isEmpty(chatMessages)}" style="text-align: center; color: #94a3b8; font-size: 13px;">
-                    Gelen kutunuz boş. Öğrencilerinizle mesajlaşmaya başlayabilirsiniz.
-                </div>
+                <div th:if="${#lists.isEmpty(chatMessages)}" style="text-align: center; color: #94a3b8; font-size: 13px;">Gelen kutunuz boş. Öğrencilerinizle mesajlaşmaya başlayabilirsiniz.</div>
             </div>
-
-            <!-- GÜVENLİK GÜNCELLEMESİ -->
             <form th:action="@{/send-message}" method="POST" style="flex-direction: row;">
                 <select name="receiverId" required style="width: 30%;">
                     <option value="">-- Öğrenci Seç --</option>
@@ -315,44 +208,36 @@
         </div>
     </section>
 
-    <!-- 5. SEKME: TOPLU DUYURU VE TOPLANTI -->
+    <!-- DUYURU VE TOPLANTI -->
     <section id="duyuru" class="content-section">
-        <div class="grid-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
-
-            <!-- Toplu Duyuru -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
             <div class="card" style="border-top: 4px solid #f59e0b; margin-bottom: 0;">
-                <div class="card-header"><i class="fas fa-bullhorn"></i> Sınıfıma Duyuru Yap</div>
+                <div class="card-header"><div><i class="fas fa-bullhorn"></i> Sınıfıma Duyuru Yap</div></div>
                 <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Buradan göndereceğiniz mesaj, sadece size bağlı olan öğrencilerin ekranında görülecektir.</p>
-                <!-- GÜVENLİK GÜNCELLEMESİ -->
                 <form th:action="@{/mentor/send-announcement}" method="POST">
                     <textarea name="message" rows="4" placeholder="Duyurunuzu buraya yazın..." required></textarea>
                     <button type="submit" style="background-color: #f59e0b;"><i class="fas fa-broadcast-tower"></i> Duyuruyu Yayınla</button>
                 </form>
             </div>
-
-            <!-- KAYIT 18: Toplu Toplantı Planlama -->
             <div class="card" style="border-top: 4px solid #6366f1; margin-bottom: 0;">
-                <div class="card-header"><i class="fas fa-video"></i> Toplantı Planla (Zoom/Meet)</div>
+                <div class="card-header"><div><i class="fas fa-video"></i> Toplantı Planla (Zoom/Meet)</div></div>
                 <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Öğrencilerinizle yapacağınız canlı görüşme için tarih ve katılım linkini paylaşın.</p>
-                <!-- GÜVENLİK GÜNCELLEMESİ -->
                 <form th:action="@{/mentor/schedule-meeting}" method="POST">
-                    <div class="form-group" style="margin-bottom: 10px;">
+                    <div style="display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px;">
                         <label style="font-size: 12px; font-weight: 600; color: #475569;">Tarih ve Saat:</label>
                         <input type="text" name="meetingDate" placeholder="Örn: 5 Eylül Cuma, Saat 20:00" required>
                     </div>
-                    <div class="form-group" style="margin-bottom: 10px;">
+                    <div style="display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px;">
                         <label style="font-size: 12px; font-weight: 600; color: #475569;">Görüşme Linki:</label>
                         <input type="text" name="meetingLink" placeholder="Örn: https://meet.google.com/abc-defg-hij" required>
                     </div>
                     <button type="submit" style="background-color: #6366f1;"><i class="fas fa-calendar-plus"></i> Toplantıyı Planla ve Duyur</button>
                 </form>
             </div>
-
         </div>
     </section>
 </main>
 
-<!-- SEKME SCRİPTİ -->
 <script>
     function degistirSekme(sekmeId, menuElemani) {
         var menuler = document.querySelectorAll('.sidebar-menu li');
@@ -366,44 +251,35 @@
 
         document.getElementById(sekmeId).classList.add('active');
     }
+
+    // YENİ: HAFTALIK FİLTRELEME (Görsel Arama Fonksiyonu)
+    function cevaplariFiltrele() {
+        var secilenHafta = document.getElementById("haftaFiltresiMentor").value;
+        var kutular = document.querySelectorAll(".cevap-kutusu");
+
+        kutular.forEach(function(kutu) {
+            // İleride backend'den hafta verisi gelene kadar, şimdilik metin içinden hafta kelimesini aratıyoruz
+            // Veya tümünü göster seçeneği çalışacak şekilde kurgulanmıştır.
+            if (secilenHafta === "TUMU") {
+                kutu.style.display = "block";
+            } else {
+                // Şimdilik kozmetik olarak çalışır, arka planda (backend) cevaplara weekNumber eklediğimizde
+                // burayı data-hafta attribute'ü ile tam entegre edeceğiz (Admin panelindeki gibi).
+                kutu.style.display = "block";
+            }
+        });
+    }
 </script>
 
-<!-- YENİ KAYIT 7, 4 & 12: SweetAlert2 Bildirimleri ve AI Karne Gösterimi -->
 <script th:inline="javascript">
     /*<![CDATA[*/
     var successMessage = /*[[${successMessage}]]*/ null;
     var aiReportMessage = /*[[${aiReportMessage}]]*/ null;
     var errorMsg = /*[[${error}]]*/ null;
 
-    if (successMessage) {
-        Swal.fire({
-            icon: 'success',
-            title: 'Başarılı!',
-            text: successMessage,
-            confirmButtonColor: '#10b981',
-            timer: 3000,
-            timerProgressBar: true
-        });
-    }
-
-    if (aiReportMessage) {
-        Swal.fire({
-            icon: 'info',
-            title: '🤖 Yapay Zeka Öğrenci Karnesi',
-            text: aiReportMessage,
-            confirmButtonColor: '#6366f1',
-            width: '600px'
-        });
-    }
-
-    if (errorMsg) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Hata!',
-            text: errorMsg,
-            confirmButtonColor: '#ef4444'
-        });
-    }
+    if (successMessage) { Swal.fire({ icon: 'success', title: 'Başarılı!', text: successMessage, confirmButtonColor: '#10b981', timer: 3000, timerProgressBar: true }); }
+    if (aiReportMessage) { Swal.fire({ icon: 'info', title: '🤖 Yapay Zeka Öğrenci Karnesi', text: aiReportMessage, confirmButtonColor: '#6366f1', width: '600px' }); }
+    if (errorMsg) { Swal.fire({ icon: 'error', title: 'Hata!', text: errorMsg, confirmButtonColor: '#ef4444' }); }
     /*]]>*/
 </script>
 </body>

@@ -14,30 +14,28 @@ public class Answer {
     private Long studentId;
     private Long questionId;
 
-    // YENİ EKLENEN: Öğrencinin seçtiği şıklar (Örn: "A", "A,C" gibi virgülle ayrılarak tutulacak)
     private String selectedOptions;
 
-    // Uzun cevaplarda veritabanının hata vermemesi için TEXT tipi belirlendi.
     @Column(columnDefinition = "TEXT")
     private String answerText;
 
     private String aiNote;
 
-    // --- MENTÖR VE SİSTEM DEĞERLENDİRME ALANLARI ---
-    // Şıklı sorularda sistem buraya otomatik puan yazacak. Klasiklerde mentör elle girecek.
     private Integer mentorScore;
 
     @Column(columnDefinition = "TEXT")
     private String mentorFeedback;
 
-    // YENİ EKLENEN KAYIT 21 (Zaman Aşımı / Yapay Zeka Yedekleme) İÇİN GEREKLİ ALANLAR:
-    // Cevabın ne zaman verildiğini tutarak zaman aşımı (örn. 48 saat) kuralını işleteceğiz.
     private LocalDateTime createdAt;
-
-    // Mentör mü puanladı yoksa süresi geçince AI mı puanladı ayrımını yapabilmek için:
     private boolean isAiScored = false;
 
-    // Cevap veritabanına ilk kaydedildiğinde zamanı otomatik atar
+    @Column(columnDefinition = "boolean default false")
+    private Boolean isCompleted;
+
+    // YENİ EKLENEN: Ay sonu puan sıfırlama kuralı için arşiv bayrağı
+    @Column(columnDefinition = "boolean default false")
+    private Boolean isMonthlyReset;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -74,4 +72,11 @@ public class Answer {
 
     public boolean isAiScored() { return isAiScored; }
     public void setAiScored(boolean aiScored) { this.isAiScored = aiScored; }
+
+    public Boolean isCompleted() { return isCompleted != null ? isCompleted : false; }
+    public void setCompleted(Boolean completed) { this.isCompleted = completed; }
+
+    // YENİ GETTER/SETTER
+    public Boolean isMonthlyReset() { return isMonthlyReset != null ? isMonthlyReset : false; }
+    public void setMonthlyReset(Boolean monthlyReset) { this.isMonthlyReset = monthlyReset; }
 }
