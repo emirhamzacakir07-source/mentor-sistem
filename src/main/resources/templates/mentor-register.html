@@ -6,6 +6,8 @@
     <title>Mentör Başvuru Portalı</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- YENİ KAYIT 7: SweetAlert2 Kütüphanesi Eklendi -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
 
@@ -15,7 +17,6 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            /* İstersen buradaki URL'yi kendi bulduğun bir fotoğrafın linkiyle değiştirebilirsin */
             background: url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
             background-size: cover;
             position: relative;
@@ -90,9 +91,6 @@
         .footer-link { text-align: center; margin-top: 20px; font-size: 13px; }
         .footer-link a { color: #93c5fd; text-decoration: none; font-weight: 600; }
         .footer-link a:hover { color: #bfdbfe; text-decoration: underline; }
-
-        .alert { background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 15px; font-size: 14px; }
-        .success { background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #86efac; }
     </style>
 </head>
 <body>
@@ -103,10 +101,8 @@
         <p>Liderlik ve Mentörlük Akademisi'ne katılmak için bilgilerinizi doldurun.</p>
     </div>
 
-    <div th:if="${error}" class="alert" th:text="${error}"></div>
-    <div th:if="${success}" class="alert success">Başvurunuz alındı! Yönetici onayından sonra sisteme giriş yapabilirsiniz.</div>
-
-    <form action="/mentor-register" method="POST">
+    <!-- GÜVENLİK GÜNCELLEMESİ: CSRF koruması için form action'ı Thymeleaf formatına çevrildi -->
+    <form th:action="@{/mentor-register}" method="POST">
         <div class="input-group">
             <i class="fas fa-user"></i>
             <input type="text" name="fullName" placeholder="Adınız ve Soyadınız" required>
@@ -145,6 +141,32 @@
         <a href="/"><i class="fas fa-arrow-left"></i> Ana Sayfaya (Öğrenci Girişi) Dön</a>
     </div>
 </div>
+
+<!-- YENİ KAYIT 7: SweetAlert2 Bildirim Kontrolü -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var successMsg = /*[[${success}]]*/ null;
+    var errorMsg = /*[[${error}]]*/ null;
+
+    if (successMsg) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Başvuru Alındı!',
+            text: 'Başvurunuz başarıyla kaydedildi. Yönetici onayından sonra sisteme giriş yapabilirsiniz.',
+            confirmButtonColor: '#3b82f6'
+        });
+    }
+
+    if (errorMsg) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Başvuru Hatası',
+            text: errorMsg,
+            confirmButtonColor: '#ef4444'
+        });
+    }
+    /*]]>*/
+</script>
 
 </body>
 </html>

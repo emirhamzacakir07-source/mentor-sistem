@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@EnableScheduling // KRİTİK: Otomatik bildirim servisinin (Scheduled) arka planda çalışmasını sağlar.
+@EnableScheduling // KRİTİK: Otomatik bildirim servisinin ve YENİ Yapay Zeka Puanlama (Zaman Aşımı) sisteminin arka planda çalışmasını sağlar.
 public class MentorApplication {
 
     public static void main(String[] args) {

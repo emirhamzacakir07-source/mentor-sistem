@@ -6,6 +6,8 @@
     <title>Mentör Paneli - Liderlik Akademisi</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- YENİ KAYIT 7: SweetAlert2 Kütüphanesi Eklendi -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* GENEL AYARLAR (Admin paneliyle uyumlu ama Mentör renklerinde) */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
@@ -178,7 +180,7 @@
         <li onclick="degistirSekme('ogrencilerim', this)"><i class="fas fa-users"></i> Sınıfım & İletişim</li>
         <li onclick="degistirSekme('degerlendirme', this)"><i class="fas fa-check-double"></i> Cevaplar & Notlar</li>
         <li onclick="degistirSekme('mesajlar', this)"><i class="fas fa-comments"></i> Birebir Mesaj Kutusu</li>
-        <li onclick="degistirSekme('duyuru', this)"><i class="fas fa-bullhorn"></i> Toplu Duyuru Yap</li>
+        <li onclick="degistirSekme('duyuru', this)"><i class="fas fa-bullhorn"></i> Toplu Duyuru & Toplantı</li>
     </ul>
     <div class="sidebar-footer">
         <a href="/logout"><i class="fas fa-sign-out-alt"></i> Sistemden Çıkış Yap</a>
@@ -204,10 +206,10 @@
         </div>
     </section>
 
-    <!-- 2. SEKME: ÖĞRENCİLERİM (EXCEL GÖRÜNÜMÜ) -->
+    <!-- 2. SEKME: ÖĞRENCİLERİM (EXCEL GÖRÜNÜMÜ + AI RAPORU) -->
     <section id="ogrencilerim" class="content-section">
         <div class="card">
-            <div class="card-header"><i class="fas fa-table"></i> Sınıf Listesi ve İletişim Bilgileri</div>
+            <div class="card-header"><i class="fas fa-table"></i> Sınıf Listesi, İletişim ve AI Gelişim Raporları</div>
             <div style="overflow-x: auto;">
                 <table class="excel-table">
                     <tr>
@@ -216,17 +218,26 @@
                         <th>Sınıfı</th>
                         <th>Öğrenci Telefonu</th>
                         <th>Veli Telefonu</th>
+                        <th>Yapay Zeka Karnesi</th>
                     </tr>
-                    <!-- THYMELEAF İLE MENTÖRÜN KENDİ ÖĞRENCİLERİ GELECEK -->
                     <tr th:each="std : ${myStudents}">
                         <td th:text="${std.fullName}">Ad Soyad</td>
                         <td th:text="${std.school}">Okul</td>
                         <td th:text="${std.gradeClass}">Sınıf</td>
                         <td th:text="${std.personalPhone}">Tel</td>
                         <td th:text="${std.parentPhone}">Veli Tel</td>
+                        <td>
+                            <!-- GÜVENLİK GÜNCELLEMESİ -->
+                            <form th:action="@{/mentor/ai-report}" method="POST" style="margin: 0;">
+                                <input type="hidden" name="studentId" th:value="${std.id}">
+                                <button type="submit" style="padding: 6px 12px; font-size: 11px; background-color: #6366f1;">
+                                    <i class="fas fa-robot"></i> AI Karne Çıkar
+                                </button>
+                            </form>
+                        </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(myStudents)}">
-                        <td colspan="5" style="text-align:center; padding: 20px;">Henüz size atanmış bir öğrenci bulunmamaktadır.</td>
+                        <td colspan="6" style="text-align:center; padding: 20px;">Henüz size atanmış bir öğrenci bulunmamaktadır.</td>
                     </tr>
                 </table>
             </div>
@@ -239,7 +250,6 @@
             <div class="card-header"><i class="fas fa-glasses"></i> Öğrenci Cevapları ve Notlandırma</div>
             <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">* Öğrencilerinizin gönderdiği cevapları inceleyip onlara sistem üzerinden geri bildirim verebilirsiniz.</p>
 
-            <!-- CEVAP KARTLARI -->
             <div th:each="ans : ${studentAnswers}" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; background: #fff;">
 
                 <div style="display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
@@ -262,8 +272,8 @@
                     <span class="badge badge-ai"><i class="fas fa-robot"></i> Yapay Zeka Notu: <span th:text="${ans.aiNote}">Analiz</span></span>
                 </div>
 
-                <!-- MENTÖR GERİ BİLDİRİM FORMU -->
-                <form action="/mentor/submit-feedback" method="POST" style="background: #f8fafc; padding: 15px; border-radius: 6px; flex-direction: row; align-items: center;">
+                <!-- GÜVENLİK GÜNCELLEMESİ -->
+                <form th:action="@{/mentor/submit-feedback}" method="POST" style="background: #f8fafc; padding: 15px; border-radius: 6px; flex-direction: row; align-items: center;">
                     <input type="hidden" name="answerId" th:value="${ans.id}">
                     <input type="number" name="mentorScore" placeholder="Puan (0-100)" style="width: 120px;" required>
                     <input type="text" name="mentorFeedback" placeholder="Öğrenciye iletilecek geri bildirim mesajınız..." required>
@@ -293,7 +303,8 @@
                 </div>
             </div>
 
-            <form action="/send-message" method="POST" style="flex-direction: row;">
+            <!-- GÜVENLİK GÜNCELLEMESİ -->
+            <form th:action="@{/send-message}" method="POST" style="flex-direction: row;">
                 <select name="receiverId" required style="width: 30%;">
                     <option value="">-- Öğrenci Seç --</option>
                     <option th:each="std : ${myStudents}" th:value="${std.id}" th:text="${std.fullName}"></option>
@@ -304,15 +315,39 @@
         </div>
     </section>
 
-    <!-- 5. SEKME: TOPLU DUYURU -->
+    <!-- 5. SEKME: TOPLU DUYURU VE TOPLANTI -->
     <section id="duyuru" class="content-section">
-        <div class="card" style="border-top: 4px solid #f59e0b;">
-            <div class="card-header"><i class="fas fa-bullhorn"></i> Sınıfıma Duyuru Yap</div>
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Buradan göndereceğiniz mesaj, sadece size bağlı olan öğrencilerin ekranında görülecektir.</p>
-            <form action="/mentor/send-announcement" method="POST">
-                <textarea name="message" rows="4" placeholder="Öğrencilerinize iletmek istediğiniz duyuruyu buraya yazın... (Örn: Yarınki denemeyi unutmayın!)" required></textarea>
-                <button type="submit" style="background-color: #f59e0b;"><i class="fas fa-broadcast-tower"></i> Duyuruyu Yayınla</button>
-            </form>
+        <div class="grid-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+
+            <!-- Toplu Duyuru -->
+            <div class="card" style="border-top: 4px solid #f59e0b; margin-bottom: 0;">
+                <div class="card-header"><i class="fas fa-bullhorn"></i> Sınıfıma Duyuru Yap</div>
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Buradan göndereceğiniz mesaj, sadece size bağlı olan öğrencilerin ekranında görülecektir.</p>
+                <!-- GÜVENLİK GÜNCELLEMESİ -->
+                <form th:action="@{/mentor/send-announcement}" method="POST">
+                    <textarea name="message" rows="4" placeholder="Duyurunuzu buraya yazın..." required></textarea>
+                    <button type="submit" style="background-color: #f59e0b;"><i class="fas fa-broadcast-tower"></i> Duyuruyu Yayınla</button>
+                </form>
+            </div>
+
+            <!-- KAYIT 18: Toplu Toplantı Planlama -->
+            <div class="card" style="border-top: 4px solid #6366f1; margin-bottom: 0;">
+                <div class="card-header"><i class="fas fa-video"></i> Toplantı Planla (Zoom/Meet)</div>
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Öğrencilerinizle yapacağınız canlı görüşme için tarih ve katılım linkini paylaşın.</p>
+                <!-- GÜVENLİK GÜNCELLEMESİ -->
+                <form th:action="@{/mentor/schedule-meeting}" method="POST">
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label style="font-size: 12px; font-weight: 600; color: #475569;">Tarih ve Saat:</label>
+                        <input type="text" name="meetingDate" placeholder="Örn: 5 Eylül Cuma, Saat 20:00" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label style="font-size: 12px; font-weight: 600; color: #475569;">Görüşme Linki:</label>
+                        <input type="text" name="meetingLink" placeholder="Örn: https://meet.google.com/abc-defg-hij" required>
+                    </div>
+                    <button type="submit" style="background-color: #6366f1;"><i class="fas fa-calendar-plus"></i> Toplantıyı Planla ve Duyur</button>
+                </form>
+            </div>
+
         </div>
     </section>
 </main>
@@ -320,23 +355,56 @@
 <!-- SEKME SCRİPTİ -->
 <script>
     function degistirSekme(sekmeId, menuElemani) {
-        // Tüm menü aktifliklerini kaldır
         var menuler = document.querySelectorAll('.sidebar-menu li');
         menuler.forEach(function(menu) { menu.classList.remove('active'); });
 
-        // Tıklanan menüyü aktif yap
         menuElemani.classList.add('active');
-
-        // Sayfa başlığını değiştir
         document.getElementById('sayfaBasligi').innerText = menuElemani.innerText;
 
-        // Tüm sekmeleri gizle
         var sekmeler = document.querySelectorAll('.content-section');
         sekmeler.forEach(function(sekme) { sekme.classList.remove('active'); });
 
-        // Sadece istenen sekmeyi göster
         document.getElementById(sekmeId).classList.add('active');
     }
+</script>
+
+<!-- YENİ KAYIT 7, 4 & 12: SweetAlert2 Bildirimleri ve AI Karne Gösterimi -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var successMessage = /*[[${successMessage}]]*/ null;
+    var aiReportMessage = /*[[${aiReportMessage}]]*/ null;
+    var errorMsg = /*[[${error}]]*/ null;
+
+    if (successMessage) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Başarılı!',
+            text: successMessage,
+            confirmButtonColor: '#10b981',
+            timer: 3000,
+            timerProgressBar: true
+        });
+    }
+
+    if (aiReportMessage) {
+        Swal.fire({
+            icon: 'info',
+            title: '🤖 Yapay Zeka Öğrenci Karnesi',
+            text: aiReportMessage,
+            confirmButtonColor: '#6366f1',
+            width: '600px'
+        });
+    }
+
+    if (errorMsg) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: errorMsg,
+            confirmButtonColor: '#ef4444'
+        });
+    }
+    /*]]>*/
 </script>
 </body>
 </html>

@@ -14,21 +14,34 @@ public class Question {
     private String content;
 
     private String type; // KLASIK veya COKTAN_SECMELI
-    private boolean isTask; // Vazife mi, soru mu?
+
+    // KAYIT 1 GÜNCELLEMESİ: Veritabanında ve formlarda null hatası almamak için boolean -> Boolean yapıldı.
+    @Column(columnDefinition = "boolean default false")
+    private Boolean isTask; // Vazife mi, soru mu?
+
     private String category;
     private Integer maxPoints;
 
+    // GÜVENLİK DOKUNUŞU: Şıklar uzun olursa veritabanı kesmesin diye TEXT yapıldı.
+    @Column(columnDefinition = "TEXT")
     private String optionA;
     private Integer optionAPoint;
+
+    @Column(columnDefinition = "TEXT")
     private String optionB;
     private Integer optionBPoint;
+
+    @Column(columnDefinition = "TEXT")
     private String optionC;
     private Integer optionCPoint;
+
+    @Column(columnDefinition = "TEXT")
     private String optionD;
     private Integer optionDPoint;
 
-    // YENİ EKLENEN: Öğrenci birden fazla şık (I, II ve III) seçebilsin mi?
-    private boolean allowMultipleSelections;
+    // KAYIT 1 GÜNCELLEMESİ: boolean -> Boolean
+    @Column(columnDefinition = "boolean default false")
+    private Boolean allowMultipleSelections;
 
     // --- GETTER VE SETTER METOTLARI ---
 
@@ -41,8 +54,9 @@ public class Question {
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
 
-    public boolean isTask() { return isTask; }
-    public void setTask(boolean task) { isTask = task; }
+    // NullPointerException almamak için güvenli dönüş
+    public Boolean isTask() { return isTask != null ? isTask : false; }
+    public void setTask(Boolean task) { this.isTask = task; }
 
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
@@ -74,7 +88,7 @@ public class Question {
     public Integer getOptionDPoint() { return optionDPoint; }
     public void setOptionDPoint(Integer optionDPoint) { this.optionDPoint = optionDPoint; }
 
-    // Yeni Özelliğin Getter ve Setter'ı
-    public boolean isAllowMultipleSelections() { return allowMultipleSelections; }
-    public void setAllowMultipleSelections(boolean allowMultipleSelections) { this.allowMultipleSelections = allowMultipleSelections; }
+    // NullPointerException almamak için güvenli dönüş
+    public Boolean isAllowMultipleSelections() { return allowMultipleSelections != null ? allowMultipleSelections : false; }
+    public void setAllowMultipleSelections(Boolean allowMultipleSelections) { this.allowMultipleSelections = allowMultipleSelections; }
 }

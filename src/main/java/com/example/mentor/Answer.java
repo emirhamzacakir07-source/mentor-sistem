@@ -1,5 +1,7 @@
 package com.example.mentor;
+
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "answers")
@@ -28,6 +30,19 @@ public class Answer {
     @Column(columnDefinition = "TEXT")
     private String mentorFeedback;
 
+    // YENİ EKLENEN KAYIT 21 (Zaman Aşımı / Yapay Zeka Yedekleme) İÇİN GEREKLİ ALANLAR:
+    // Cevabın ne zaman verildiğini tutarak zaman aşımı (örn. 48 saat) kuralını işleteceğiz.
+    private LocalDateTime createdAt;
+
+    // Mentör mü puanladı yoksa süresi geçince AI mı puanladı ayrımını yapabilmek için:
+    private boolean isAiScored = false;
+
+    // Cevap veritabanına ilk kaydedildiğinde zamanı otomatik atar
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+
     // --- GETTER VE SETTER METOTLARI ---
 
     public Long getId() { return id; }
@@ -39,7 +54,6 @@ public class Answer {
     public Long getQuestionId() { return questionId; }
     public void setQuestionId(Long questionId) { this.questionId = questionId; }
 
-    // Yeni Eklenen Seçili Şıklar Getter/Setter'ı
     public String getSelectedOptions() { return selectedOptions; }
     public void setSelectedOptions(String selectedOptions) { this.selectedOptions = selectedOptions; }
 
@@ -54,4 +68,10 @@ public class Answer {
 
     public String getMentorFeedback() { return mentorFeedback; }
     public void setMentorFeedback(String mentorFeedback) { this.mentorFeedback = mentorFeedback; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public boolean isAiScored() { return isAiScored; }
+    public void setAiScored(boolean aiScored) { this.isAiScored = aiScored; }
 }

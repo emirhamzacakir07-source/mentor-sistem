@@ -2,9 +2,13 @@ package com.example.mentor;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,18 +25,19 @@ public class AppController {
     @Autowired private AiService aiService;
     @Autowired private NotificationRepository notificationRepository;
     @Autowired private MessageRepository messageRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
 
     // --- GENEL GİRİŞ (Öğrenci ve Admin) ---
     @GetMapping("/")
     public String loginPage() { return "index"; }
 
     @PostMapping("/login")
-    public String login(@RequestParam String username, @RequestParam String password, HttpSession session, Model model) {
-        User user = userRepository.findByUsernameAndPassword(username, password);
-        if (user != null) {
+    public String login(@RequestParam String username, @RequestParam String password, HttpSession session, RedirectAttributes redirectAttributes) {
+        User user = userRepository.findByUsername(username);
+        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
             if ("MENTOR".equals(user.getRole())) {
-                model.addAttribute("error", "Mentör girişleri özel sayfadan yapılmaktadır. Lütfen 'Mentör Girişi' bağlantısını kullanın.");
-                return "index";
+                redirectAttributes.addFlashAttribute("error", "Mentör girişleri özel sayfadan yapılmaktadır. Lütfen 'Mentör Girişi' bağlantısını kullanın.");
+                return "redirect:/"; // PRG Kuralı
             }
 
             user.setLastLoginDate(LocalDateTime.now());
@@ -46,8 +51,8 @@ public class AppController {
             if (user.getRole().equals("ADMIN")) return "redirect:/admin";
             else return "redirect:/student";
         }
-        model.addAttribute("error", "Kullanıcı adı veya şifre hatalı!");
-        return "index";
+        redirectAttributes.addFlashAttribute("error", "Kullanıcı adı veya şifre hatalı!");
+        return "redirect:/";
     }
 
     // --- MENTÖR ÖZEL GİRİŞİ ---
@@ -57,13 +62,13 @@ public class AppController {
     }
 
     @PostMapping("/mentor-login")
-    public String processMentorLogin(@RequestParam String username, @RequestParam String password, HttpSession session, Model model) {
-        User user = userRepository.findByUsernameAndPassword(username, password);
+    public String processMentorLogin(@RequestParam String username, @RequestParam String password, HttpSession session, RedirectAttributes redirectAttributes) {
+        User user = userRepository.findByUsername(username);
 
-        if (user != null && "MENTOR".equals(user.getRole())) {
+        if (user != null && "MENTOR".equals(user.getRole()) && passwordEncoder.matches(password, user.getPassword())) {
             if (!user.isApproved()) {
-                model.addAttribute("error", "Hesabınız henüz onaylanmamış. Lütfen yönetici onayını bekleyiniz.");
-                return "mentor-login";
+                redirectAttributes.addFlashAttribute("error", "Hesabınız henüz onaylanmamış. Lütfen yönetici onayını bekleyiniz.");
+                return "redirect:/mentor-login";
             }
             user.setLastLoginDate(LocalDateTime.now());
             user.setInactiveWarningSent(false);
@@ -76,8 +81,8 @@ public class AppController {
             return "redirect:/mentor";
         }
 
-        model.addAttribute("error", "Kayıtlı mentör bulunamadı veya şifre hatalı!");
-        return "mentor-login";
+        redirectAttributes.addFlashAttribute("error", "Kayıtlı mentör bulunamadı veya şifre hatalı!");
+        return "redirect:/mentor-login";
     }
 
     // --- KAYIT İŞLEMLERİ ---
@@ -85,33 +90,38 @@ public class AppController {
     public String registerPage() { return "register"; }
 
     @PostMapping("/register")
-    public String registerUser(@ModelAttribute User user, Model model) {
+    public String registerUser(@ModelAttribute User user, RedirectAttributes redirectAttributes) {
         if (userRepository.findByUsername(user.getUsername()) != null) {
-            model.addAttribute("error", "Bu kullanıcı adı zaten alınmış!");
-            return "register";
+            redirectAttributes.addFlashAttribute("error", "Bu kullanıcı adı zaten alınmış!");
+            return "redirect:/register";
         }
         user.setRole("STUDENT");
-        user.setApproved(true);
+        user.setApproved(true); // Öğrenciler direkt onaylı
         user.setLastLoginDate(LocalDateTime.now());
+        user.setPassword(passwordEncoder.encode(user.getPassword())); // GÜVENLİK: Şifre artık hash'lenerek saklanıyor
         userRepository.save(user);
-        return "redirect:/?success=true";
+
+        redirectAttributes.addFlashAttribute("success", "Kayıt başarılı! Lütfen giriş yapınız.");
+        return "redirect:/";
     }
 
     @GetMapping("/mentor-register")
     public String mentorRegisterPage() { return "mentor-register"; }
 
     @PostMapping("/mentor-register")
-    public String registerMentor(@ModelAttribute User user, Model model) {
+    public String registerMentor(@ModelAttribute User user, RedirectAttributes redirectAttributes) {
         if (userRepository.findByUsername(user.getUsername()) != null) {
-            model.addAttribute("error", "Bu kullanıcı adı zaten alınmış!");
-            return "mentor-register";
+            redirectAttributes.addFlashAttribute("error", "Bu kullanıcı adı zaten alınmış!");
+            return "redirect:/mentor-register";
         }
         user.setRole("MENTOR");
-        user.setApproved(false);
+        user.setApproved(false); // Admin onayı gerekecek
         user.setLastLoginDate(LocalDateTime.now());
+        user.setPassword(passwordEncoder.encode(user.getPassword())); // GÜVENLİK: Şifre artık hash'lenerek saklanıyor
         userRepository.save(user);
-        model.addAttribute("success", true);
-        return "mentor-register";
+
+        redirectAttributes.addFlashAttribute("success", "Başvurunuz alındı. Yönetici onayından sonra giriş yapabilirsiniz.");
+        return "redirect:/mentor-register";
     }
 
     @GetMapping("/logout")
@@ -124,26 +134,44 @@ public class AppController {
     public String forgotPasswordPage() { return "forgot-password"; }
 
     @PostMapping("/forgot-password")
-    public String processForgotPassword(@RequestParam String username, Model model) {
+    public String processForgotPassword(@RequestParam String username, RedirectAttributes redirectAttributes) {
         User user = userRepository.findByUsername(username);
         if (user != null) {
             Notification n = new Notification();
             n.setMessage("🔴 ŞİFRE SIFIRLAMA TALEBİ: " + user.getFullName());
             n.setCreatedAt(LocalDateTime.now());
             notificationRepository.save(n);
-            model.addAttribute("success", "Talebiniz yöneticiye iletildi.");
+            redirectAttributes.addFlashAttribute("success", "Talebiniz yöneticiye iletildi.");
         } else {
-            model.addAttribute("error", "Kullanıcı bulunamadı!");
+            redirectAttributes.addFlashAttribute("error", "Kullanıcı bulunamadı!");
         }
-        return "forgot-password";
+        return "redirect:/forgot-password";
     }
 
     @PostMapping("/send-message")
-    public String sendMessage(@RequestParam Long receiverId, @RequestParam String content, HttpSession session) {
+    public String sendMessage(@RequestParam Long receiverId, @RequestParam String content, HttpSession session, RedirectAttributes redirectAttributes) {
         Long senderId = (Long) session.getAttribute("loggedInUserId");
         String role = (String) session.getAttribute("loggedInUserRole");
 
         if (senderId == null) return "redirect:/";
+
+        // GÜVENLİK DÜZELTMESİ: Gönderen kişi sadece KENDİ mentörüne (öğrenciyse)
+        // veya KENDİ öğrencisine (mentörse) mesaj atabilir. Bu kontrol olmadan,
+        // receiverId form alanı tarayıcıdan değiştirilerek ilgisi olmayan bir
+        // kullanıcıya mesaj gönderilebiliyordu.
+        boolean allowed = false;
+        if ("STUDENT".equals(role)) {
+            User student = userRepository.findById(senderId).orElse(null);
+            allowed = student != null && receiverId.equals(student.getAssignedMentorId());
+        } else if ("MENTOR".equals(role)) {
+            User receiver = userRepository.findById(receiverId).orElse(null);
+            allowed = receiver != null && "STUDENT".equals(receiver.getRole()) && senderId.equals(receiver.getAssignedMentorId());
+        }
+
+        if (!allowed) {
+            redirectAttributes.addFlashAttribute("error", "Bu kişiye mesaj gönderme yetkiniz yok.");
+            return "MENTOR".equals(role) ? "redirect:/mentor" : "redirect:/student";
+        }
 
         Message msg = new Message();
         msg.setSenderId(senderId);
@@ -152,6 +180,8 @@ public class AppController {
         msg.setSentAt(LocalDateTime.now());
         msg.setRead(false);
         messageRepository.save(msg);
+
+        redirectAttributes.addFlashAttribute("successMessage", "Mesaj başarıyla gönderildi!");
 
         if ("MENTOR".equals(role)) return "redirect:/mentor";
         else return "redirect:/student";
@@ -166,7 +196,12 @@ public class AppController {
         model.addAttribute("questions", questionRepository.findAll());
         model.addAttribute("users", userRepository.findAll());
 
-        List<Answer> allAnswers = (List<Answer>) answerRepository.findAll();
+        // DÜZELTME: findAll() teorik olarak Iterable döndürür; (List) diye zorla
+        // çevirmek yerine güvenli şekilde listeye topluyoruz. Böylece repository
+        // implementasyonu değişse bile ClassCastException riski kalmıyor.
+        List<Answer> allAnswers = new ArrayList<>();
+        answerRepository.findAll().forEach(allAnswers::add);
+
         List<Map<String, Object>> adminAnswers = new ArrayList<>();
         for (Answer ans : allAnswers) {
             Map<String, Object> map = new HashMap<>();
@@ -211,16 +246,11 @@ public class AppController {
             @RequestParam(required = false) String optionC_text, @RequestParam(required = false) String optionC_point,
             @RequestParam(required = false) String optionD_text, @RequestParam(required = false) String optionD_point,
             @RequestParam(required = false, defaultValue = "false") boolean allowMultipleSelections,
-            HttpSession session) {
+            HttpSession session, RedirectAttributes redirectAttributes) {
 
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
 
-        Question q;
-        if (id != null) {
-            q = questionRepository.findById(id).orElse(new Question());
-        } else {
-            q = new Question();
-        }
+        Question q = (id != null) ? questionRepository.findById(id).orElse(new Question()) : new Question();
 
         q.setContent(content); q.setType(type); q.setTask(isTask); q.setCategory(category);
         q.setAllowMultipleSelections(allowMultipleSelections);
@@ -230,13 +260,10 @@ public class AppController {
         if ("COKTAN_SECMELI".equals(type)) {
             q.setOptionA(optionA_text);
             try { q.setOptionAPoint((optionA_point != null && !optionA_point.trim().isEmpty()) ? Integer.parseInt(optionA_point) : 0); } catch (Exception e) { q.setOptionAPoint(0); }
-
             q.setOptionB(optionB_text);
             try { q.setOptionBPoint((optionB_point != null && !optionB_point.trim().isEmpty()) ? Integer.parseInt(optionB_point) : 0); } catch (Exception e) { q.setOptionBPoint(0); }
-
             q.setOptionC(optionC_text);
             try { q.setOptionCPoint((optionC_point != null && !optionC_point.trim().isEmpty()) ? Integer.parseInt(optionC_point) : 0); } catch (Exception e) { q.setOptionCPoint(0); }
-
             q.setOptionD(optionD_text);
             try { q.setOptionDPoint((optionD_point != null && !optionD_point.trim().isEmpty()) ? Integer.parseInt(optionD_point) : 0); } catch (Exception e) { q.setOptionDPoint(0); }
         } else {
@@ -245,39 +272,42 @@ public class AppController {
             q.setOptionC(null); q.setOptionCPoint(0);
             q.setOptionD(null); q.setOptionDPoint(0);
         }
+
         questionRepository.save(q);
+        redirectAttributes.addFlashAttribute("successMessage", "Soru başarıyla kaydedildi.");
         return "redirect:/admin";
     }
 
     @PostMapping("/admin/delete-question")
-    public String deleteQuestion(@RequestParam Long id, HttpSession session) {
+    public String deleteQuestion(@RequestParam Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
-
         List<Answer> answers = answerRepository.findByQuestionId(id);
         answerRepository.deleteAll(answers);
         questionRepository.deleteById(id);
-
+        redirectAttributes.addFlashAttribute("successMessage", "Soru ve bağlı cevaplar silindi.");
         return "redirect:/admin";
     }
 
     @PostMapping("/admin/assign-mentor")
-    public String assignMentor(@RequestParam Long mentor_id, @RequestParam Long student_id, HttpSession session) {
+    public String assignMentor(@RequestParam Long mentor_id, @RequestParam Long student_id, HttpSession session, RedirectAttributes redirectAttributes) {
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
         User student = userRepository.findById(student_id).orElse(null);
         if (student != null && "STUDENT".equals(student.getRole())) {
             student.setAssignedMentorId(mentor_id);
             userRepository.save(student);
+            redirectAttributes.addFlashAttribute("successMessage", "Mentör başarıyla atandı.");
         }
         return "redirect:/admin";
     }
 
     @PostMapping("/admin/approve-mentor")
-    public String approveMentor(@RequestParam Long mentor_id, HttpSession session) {
+    public String approveMentor(@RequestParam Long mentor_id, HttpSession session, RedirectAttributes redirectAttributes) {
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
         User mentor = userRepository.findById(mentor_id).orElse(null);
         if (mentor != null && "MENTOR".equals(mentor.getRole())) {
             mentor.setApproved(true);
             userRepository.save(mentor);
+            redirectAttributes.addFlashAttribute("successMessage", "Mentör hesabı onaylandı.");
         }
         return "redirect:/admin";
     }
@@ -288,7 +318,10 @@ public class AppController {
         if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
         Long mentorId = (Long) session.getAttribute("loggedInUserId");
 
-        List<User> allUsers = (List<User>) userRepository.findAll();
+        // DÜZELTME: (List) cast riski kaldırıldı, güvenli şekilde listeye topluyoruz.
+        List<User> allUsers = new ArrayList<>();
+        userRepository.findAll().forEach(allUsers::add);
+
         List<User> myStudents = allUsers.stream().filter(u -> "STUDENT".equals(u.getRole()) && mentorId.equals(u.getAssignedMentorId())).collect(Collectors.toList());
         model.addAttribute("myStudents", myStudents);
 
@@ -298,6 +331,7 @@ public class AppController {
             for (Answer ans : answers) {
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", ans.getId());
+                map.put("studentId", student.getId()); // Toplu Rapor için ID eklendi
                 map.put("studentName", student.getFullName());
                 map.put("answerText", ans.getAnswerText());
                 map.put("aiNote", ans.getAiNote());
@@ -329,25 +363,85 @@ public class AppController {
     }
 
     @PostMapping("/mentor/submit-feedback")
-    public String submitFeedback(@RequestParam Long answerId, @RequestParam Integer mentorScore, @RequestParam String mentorFeedback, HttpSession session) {
+    public String submitFeedback(@RequestParam Long answerId, @RequestParam Integer mentorScore, @RequestParam String mentorFeedback, HttpSession session, RedirectAttributes redirectAttributes) {
         if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
+        Long mentorId = (Long) session.getAttribute("loggedInUserId");
+
         Answer ans = answerRepository.findById(answerId).orElse(null);
-        if (ans != null) {
-            ans.setMentorScore(mentorScore);
-            ans.setMentorFeedback(mentorFeedback);
-            answerRepository.save(ans);
+        if (ans == null) {
+            redirectAttributes.addFlashAttribute("error", "Cevap bulunamadı.");
+            return "redirect:/mentor";
         }
+
+        // GÜVENLİK DÜZELTMESİ (IDOR): Bu cevap gerçekten bu mentöre atanmış bir
+        // öğrenciye mi ait, kontrol ediliyor. Kontrol olmadan, bir mentör
+        // answerId'yi değiştirerek başka mentörlerin öğrencilerini puanlayabilirdi.
+        User student = userRepository.findById(ans.getStudentId()).orElse(null);
+        if (student == null || !mentorId.equals(student.getAssignedMentorId())) {
+            redirectAttributes.addFlashAttribute("error", "Bu cevabı değerlendirme yetkiniz yok.");
+            return "redirect:/mentor";
+        }
+
+        // GÜVENLİK/VERİ DÜZELTMESİ: Puan 0-100 aralığına sabitlendi.
+        int clampedScore = Math.max(0, Math.min(100, mentorScore));
+
+        ans.setMentorScore(clampedScore);
+        ans.setMentorFeedback(mentorFeedback);
+        answerRepository.save(ans);
+        redirectAttributes.addFlashAttribute("successMessage", "Değerlendirme kaydedildi.");
         return "redirect:/mentor";
     }
 
     @PostMapping("/mentor/send-announcement")
-    public String sendAnnouncement(@RequestParam String message, HttpSession session) {
+    public String sendAnnouncement(@RequestParam String message, HttpSession session, RedirectAttributes redirectAttributes) {
         if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
         String mentorName = (String) session.getAttribute("loggedInUsername");
         Notification n = new Notification();
         n.setMessage("📢 DUYURU (" + mentorName + "): " + message);
         n.setCreatedAt(LocalDateTime.now());
         notificationRepository.save(n);
+        redirectAttributes.addFlashAttribute("successMessage", "Duyuru öğrencilere iletildi.");
+        return "redirect:/mentor";
+    }
+
+    // Mentörün AI Öğrenci Raporunu Oluşturması
+    @PostMapping("/mentor/ai-report")
+    public String generateAiReport(@RequestParam Long studentId, HttpSession session, RedirectAttributes redirectAttributes) {
+        if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
+        Long mentorId = (Long) session.getAttribute("loggedInUserId");
+
+        User student = userRepository.findById(studentId).orElse(null);
+
+        // GÜVENLİK DÜZELTMESİ (IDOR): studentId'nin gerçekten bu mentöre atanmış
+        // olup olmadığı kontrol ediliyor. Aksi halde bir mentör, studentId'yi
+        // değiştirerek başka mentörlerin öğrencilerinin AI raporunu görebilirdi.
+        if (student == null || !mentorId.equals(student.getAssignedMentorId())) {
+            redirectAttributes.addFlashAttribute("error", "Bu öğrenci için rapor oluşturma yetkiniz yok.");
+            return "redirect:/mentor";
+        }
+
+        List<Answer> last5Answers = answerRepository.findTop5ByStudentIdOrderByCreatedAtDesc(studentId);
+        List<String> answerTexts = last5Answers.stream().map(Answer::getAnswerText).collect(Collectors.toList());
+
+        String report = aiService.analyzeStudentPerformance(student.getFullName(), answerTexts);
+
+        // Sonucu SweetAlert ile göstermek için FlashAttribute'a ekliyoruz
+        redirectAttributes.addFlashAttribute("aiReportMessage", report);
+        return "redirect:/mentor";
+    }
+
+    // Mentör Toplu Toplantı Planlama
+    @PostMapping("/mentor/schedule-meeting")
+    public String scheduleMeeting(@RequestParam String meetingDate, @RequestParam String meetingLink, HttpSession session, RedirectAttributes redirectAttributes) {
+        if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
+
+        String mentorName = (String) session.getAttribute("loggedInUsername");
+        Notification n = new Notification();
+        n.setMessage("📅 TOPLANTI (" + mentorName + "): Yeni bir mentör toplantısı planlandı! Tarih: " + meetingDate + " Link: " + meetingLink);
+        n.setCreatedAt(LocalDateTime.now());
+        notificationRepository.save(n);
+
+        redirectAttributes.addFlashAttribute("successMessage", "Toplantı planlandı ve tüm öğrencilere duyuruldu.");
         return "redirect:/mentor";
     }
 
@@ -364,7 +458,10 @@ public class AppController {
             mentor = userRepository.findById(student.getAssignedMentorId()).orElse(null);
         }
 
-        List<Question> allQuestions = (List<Question>) questionRepository.findAll();
+        // DÜZELTME: (List) cast riski kaldırıldı, güvenli şekilde listeye topluyoruz.
+        List<Question> allQuestions = new ArrayList<>();
+        questionRepository.findAll().forEach(allQuestions::add);
+
         List<Question> tasks = allQuestions.stream().filter(Question::isTask).collect(Collectors.toList());
         List<Question> questions = allQuestions.stream().filter(q -> !q.isTask()).collect(Collectors.toList());
 
@@ -374,6 +471,17 @@ public class AppController {
         Map<Long, Answer> answerMap = new HashMap<>();
         for (Answer a : answers) { answerMap.put(a.getQuestionId(), a); }
 
+        // Cuma Soru Kilidi Kontrolü
+        boolean isLocked = false;
+        LocalDateTime now = LocalDateTime.now();
+        // Cuma akşam 18:00'den Pazar gecesine kadar kilitli
+        if ((now.getDayOfWeek() == DayOfWeek.FRIDAY && now.getHour() >= 18) ||
+                now.getDayOfWeek() == DayOfWeek.SATURDAY ||
+                now.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            isLocked = true;
+        }
+
+        model.addAttribute("isLocked", isLocked);
         model.addAttribute("student", student);
         model.addAttribute("mentor", mentor);
         model.addAttribute("tasks", tasks);
@@ -388,15 +496,24 @@ public class AppController {
         return "student";
     }
 
-    // İŞTE YEPYENİ AKILLI CEVAPLAMA VE OTOMATİK PUANLAMA METODU
+    // ÖĞRENCİ CEVAPLAMA MERKEZİ
     @PostMapping("/submit-answer")
     public String submitAnswer(
             @RequestParam Long questionId,
             @RequestParam(required = false) String answerText,
-            @RequestParam(required = false) List<String> selectedOptions, // Öğrencinin seçtiği şıkları liste olarak alıyoruz
-            HttpSession session) {
+            @RequestParam(required = false) List<String> selectedOptions,
+            HttpSession session, RedirectAttributes redirectAttributes) {
 
         if (!"STUDENT".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
+
+        // Güvenlik - Kilitli saatlerde POST isteği gelirse reddet
+        LocalDateTime now = LocalDateTime.now();
+        if ((now.getDayOfWeek() == DayOfWeek.FRIDAY && now.getHour() >= 18) ||
+                now.getDayOfWeek() == DayOfWeek.SATURDAY ||
+                now.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            redirectAttributes.addFlashAttribute("error", "Sistem şu an kilitli. Hafta sonu cevap gönderimi yapılamaz.");
+            return "redirect:/student";
+        }
 
         Long studentId = (Long) session.getAttribute("loggedInUserId");
         User student = userRepository.findById(studentId).orElse(null);
@@ -408,16 +525,15 @@ public class AppController {
         a.setQuestionId(questionId);
         a.setStudentId(studentId);
         a.setAnswerText(answerText != null ? answerText : "");
+        a.setCreatedAt(LocalDateTime.now());
 
-        // EĞER SORU ÇOKTAN SEÇMELİYSE: OTOMATİK PUAN HESAPLA!
+        // ÇOKTAN SEÇMELİ SİSTEMİ VE OTOMATİK PUANLAMA
         if ("COKTAN_SECMELI".equals(question.getType())) {
             int totalScore = 0;
 
             if (selectedOptions != null && !selectedOptions.isEmpty()) {
-                // Şıkları veritabanına kaydet (Örn: "A,B" şeklinde)
                 a.setSelectedOptions(String.join(",", selectedOptions));
 
-                // Hangi şıklar seçildiyse onun puanını toplam puana ekle
                 if (selectedOptions.contains("A") && question.getOptionAPoint() != null) totalScore += question.getOptionAPoint();
                 if (selectedOptions.contains("B") && question.getOptionBPoint() != null) totalScore += question.getOptionBPoint();
                 if (selectedOptions.contains("C") && question.getOptionCPoint() != null) totalScore += question.getOptionCPoint();
@@ -426,11 +542,9 @@ public class AppController {
                 a.setSelectedOptions("");
             }
 
-            // Mentörün puan girmesini bekleme, otomatik hesaplanan puanı direkt kaydet!
             a.setMentorScore(totalScore);
 
         } else {
-            // Klasik soruysa mentörün puanlaması için şimdilik boş bırak (null)
             a.setMentorScore(null);
         }
 
@@ -444,6 +558,7 @@ public class AppController {
             notificationRepository.save(n);
         }
 
+        redirectAttributes.addFlashAttribute("successMessage", "Cevabın başarıyla sisteme kaydedildi!");
         return "redirect:/student";
     }
 }

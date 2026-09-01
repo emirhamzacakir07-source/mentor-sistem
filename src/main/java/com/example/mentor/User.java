@@ -25,6 +25,10 @@ public class User {
     private String role; // ADMIN, STUDENT veya MENTOR olacak
     private String category; // Mentör uzmanlık alanı
 
+    // --- YENİ KAYIT 10 & 17 (Şehir ve Cinsiyet) İÇİN EKLENEN ALANLAR ---
+    private String city; // Öğrenci/Mentör şehri
+    private String gender; // Cinsiyet bilgisi
+
     // --- YENİ: MENTÖR KAYIT VE ONAY SİSTEMİ İÇİN ---
     private String region; // Mentörün bölgesi (Meram, Selçuklu vb.)
     private boolean isApproved; // Admin onayladı mı? (Öğrenciler otomatik true olacak, Mentörler false başlayacak)
@@ -77,11 +81,17 @@ public class User {
     public void setAssignedMentorId(Long assignedMentorId) { this.assignedMentorId = assignedMentorId; }
 
     // --- YENİ EKLENENLERİN GETTER / SETTER'LARI ---
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
+
     public String getRegion() { return region; }
     public void setRegion(String region) { this.region = region; }
 
     public boolean isApproved() { return isApproved; }
-    public void setApproved(boolean approved) { isApproved = approved; }
+    public void setApproved(boolean approved) { this.isApproved = approved; }
 
     public LocalDateTime getLastLoginDate() { return lastLoginDate; }
     public void setLastLoginDate(LocalDateTime lastLoginDate) { this.lastLoginDate = lastLoginDate; }

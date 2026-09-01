@@ -8,6 +8,7 @@
     <!-- Google Fonts ve İkonlar -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         body {
@@ -119,7 +120,6 @@
         .neon-yesil { border-top: 4px solid #00e676; box-shadow: 0 -5px 15px rgba(0, 230, 118, 0.2), 0 10px 25px rgba(0, 0, 0, 0.5); }
         .neon-yesil h3, .neon-yesil i { color: #00e676; }
 
-        /* YENİ: Turuncu/Altın Neon Tema */
         .neon-turuncu { border-top: 4px solid #ff9800; box-shadow: 0 -5px 15px rgba(255, 152, 0, 0.2), 0 10px 25px rgba(0, 0, 0, 0.5); }
         .neon-turuncu h3, .neon-turuncu i { color: #ff9800; }
 
@@ -151,11 +151,35 @@
             gap: 15px;
         }
 
+        /* Erişilebilirlik: Görsel olarak gizli ama ekran okuyucular için görünür etiketler */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .alan-grubu {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
         input {
             padding: 12px;
             border: 1px solid #ccc;
             border-radius: 8px;
             font-size: 1rem;
+        }
+
+        input:focus {
+            outline: 2px solid #007BFF;
+            outline-offset: 1px;
         }
 
         button {
@@ -172,6 +196,11 @@
 
         button:hover {
             background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #99c2ff;
+            cursor: not-allowed;
         }
 
         .alt-linkler {
@@ -209,6 +238,12 @@
 
         .mentor-linki a:hover {
             color: #059669;
+        }
+
+        @media (max-width: 768px) {
+            .arkaplan-resmi {
+                filter: blur(6px) brightness(0.6);
+            }
         }
     </style>
 </head>
@@ -248,12 +283,20 @@
     <div class="giris-kutusu">
         <img src="https://i.ibb.co/hF8nsNcF/Whats-App-mage-2026-08-28-at-20-10-26.jpg" alt="Mentörlük Programı" class="ortadaki-foto">
 
-        <div th:if="${error != null}" style="color: #dc3545; background-color: #f8d7da; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-weight: bold;" th:text="${error}"></div>
-        <div th:if="${param.success != null}" style="color: #28a745; background-color: #d4edda; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-weight: bold;">Kayıt başarılı! Lütfen giriş yapın.</div>
+        <form th:action="@{/login}" method="POST" autocomplete="on">
 
-        <form action="/login" method="POST">
-            <input type="text" name="username" placeholder="Kullanıcı Adı" required>
-            <input type="password" name="password" placeholder="Şifre" required>
+            <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div class="alan-grubu">
+                <label for="username" class="sr-only">Kullanıcı Adı</label>
+                <input type="text" id="username" name="username" placeholder="Kullanıcı Adı" autocomplete="username" required>
+            </div>
+
+            <div class="alan-grubu">
+                <label for="password" class="sr-only">Şifre</label>
+                <input type="password" id="password" name="password" placeholder="Şifre" autocomplete="current-password" required>
+            </div>
+
             <button type="submit">Giriş Yap</button>
         </form>
 
@@ -262,7 +305,7 @@
             <a href="/forgot-password">Şifremi Unuttum</a>
         </div>
 
-        <!-- YENİ EKLENEN MENTÖR GİRİŞ LİNKİ -->
+        <!-- MENTÖR GİRİŞ LİNKİ -->
         <div class="mentor-linki">
             <a href="/mentor-login"><i class="fas fa-chalkboard-teacher"></i> Mentör Girişi</a>
         </div>
@@ -292,6 +335,34 @@
     </div>
 
 </div>
+
+<!-- SweetAlert2 Bildirim Kontrolü -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var errorMsg = /*[[${error}]]*/ null;
+    var successParam = /*[[${param.success}]]*/ null;
+
+    if (errorMsg) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Giriş Başarısız',
+            text: errorMsg,
+            confirmButtonColor: '#007BFF'
+        });
+    }
+
+    if (successParam) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Kayıt Başarılı!',
+            text: 'Hesabınız oluşturuldu. Lütfen giriş yapın.',
+            confirmButtonColor: '#28a745',
+            timer: 3500,
+            timerProgressBar: true
+        });
+    }
+    /*]]>*/
+</script>
 
 </body>
 </html>

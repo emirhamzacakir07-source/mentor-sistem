@@ -6,6 +6,8 @@
     <title>Mentör Girişi - Gençlik Akademisi</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- YENİ KAYIT 7: SweetAlert2 Kütüphanesi Eklendi -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* GENEL AYARLAR */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
@@ -33,18 +35,6 @@
         .login-card h2 { color: #0f172a; margin-bottom: 5px; font-size: 22px; }
         .icon-wrapper { font-size: 45px; color: #10b981; margin-bottom: 15px; }
         .subtitle { font-size: 13px; color: #64748b; margin-bottom: 25px; }
-
-        /* HATA MESAJI */
-        .error-message {
-            background: #fee2e2;
-            color: #ef4444;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            margin-bottom: 20px;
-            border: 1px solid #f87171;
-        }
 
         /* FORM ELEMANLARI */
         form { display: flex; flex-direction: column; gap: 15px; }
@@ -94,13 +84,8 @@
     <h2>Mentör Girişi</h2>
     <p class="subtitle">Gençlik Akademisi Mentör Yönetim Paneli</p>
 
-    <!-- HATA MESAJI (Eğer şifre yanlışsa veya onaylanmamışsa çıkar) -->
-    <div th:if="${error}" class="error-message">
-        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
-    </div>
-
-    <!-- GİRİŞ FORMU -->
-    <form action="/mentor-login" method="POST">
+    <!-- GÜVENLİK GÜNCELLEMESİ: CSRF koruması için form action'ı Thymeleaf formatına çevrildi -->
+    <form th:action="@{/mentor-login}" method="POST">
         <div class="input-group">
             <i class="fas fa-user"></i>
             <input type="text" name="username" placeholder="Kullanıcı Adınız" required>
@@ -121,6 +106,22 @@
         <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Öğrenci / Yönetici Girişine Dön</a>
     </div>
 </div>
+
+<!-- YENİ KAYIT 7: SweetAlert2 Hata ve Uyarı Kontrolü -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var errorMsg = /*[[${error}]]*/ null;
+
+    if (errorMsg) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Giriş Başarısız',
+            text: errorMsg,
+            confirmButtonColor: '#10b981'
+        });
+    }
+    /*]]>*/
+</script>
 
 </body>
 </html>

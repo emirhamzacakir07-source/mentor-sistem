@@ -6,6 +6,8 @@
     <title>Öğrenci Portalı - Liderlik Akademisi</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- YENİ KAYIT 7: SweetAlert2 Kütüphanesi Eklendi -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* GENEL AYARLAR */
         * {
@@ -152,7 +154,7 @@
         }
         .options-list p { margin-bottom: 5px; font-size: 14px; }
 
-        /* YENİ EKLENEN İNTERAKTİF ŞIK TASARIMLARI */
+        /* İNTERAKTİF ŞIK TASARIMLARI */
         .secim-satiri {
             display: flex;
             align-items: center;
@@ -255,7 +257,6 @@
 
         /* ----- MOBİL UYUMLULUK (Responsive Design) ----- */
         @media (max-width: 992px) {
-            /* 3 Sütunlu yapıyı tek sütuna çevir */
             .container {
                 grid-template-columns: 1fr;
                 padding: 15px;
@@ -264,11 +265,9 @@
             .topbar { padding: 15px; }
             .topbar h2 { font-size: 16px; }
 
-            /* Zili göster, masaüstü duyuru kartını gizle */
             .mobil-bildirim-zili { display: inline-block !important; }
             .desktop-duyuru { display: none !important; }
 
-            /* Soru alanındaki yazıları telefona uygun boyuta getir */
             .content-card p { font-size: 16px !important; line-height: 1.5; }
             .content-card { padding: 15px; }
         }
@@ -298,7 +297,6 @@
         <!-- MOBİL BİLDİRİM ZİLİ -->
         <div class="mobil-bildirim-zili" onclick="duyurulariMobildeAc()">
             <i class="fas fa-bell"></i>
-            <!-- Thymeleaf ile veritabanındaki bildirim sayısını alıyoruz -->
             <span class="bildirim-rozeti" id="zil-rozeti" th:text="${#lists.size(notifications)}">0</span>
         </div>
 
@@ -347,41 +345,35 @@
             </div>
             <p style="font-weight: 600; margin-bottom: 10px;" th:text="${q.content}">Soru Metni</p>
 
-            <!-- DAHA ÖNCE CEVAPLANMIŞSA GÖRÜNTÜLENECEK KISIM (GÜNCELLENDİ) -->
+            <!-- DAHA ÖNCE CEVAPLANMIŞSA GÖRÜNTÜLENECEK KISIM -->
             <div th:if="${answerMap.containsKey(q.id)}" class="answered-box">
 
-                <!-- Seçili şıklar varsa göster -->
                 <p th:if="${answerMap.get(q.id).selectedOptions != null and answerMap.get(q.id).selectedOptions != ''}" style="font-size: 13px; color: #166534; margin-bottom: 8px;">
                     <i class="fas fa-check-square"></i> <strong>Seçilen Şık:</strong> <span th:text="${answerMap.get(q.id).selectedOptions}"></span>
                 </p>
 
-                <!-- Öğrencinin yazdığı metin varsa göster -->
                 <p th:if="${answerMap.get(q.id).answerText != null and answerMap.get(q.id).answerText != ''}" style="font-size: 13px; color: #475569;">
                     <i class="fas fa-comment-dots"></i> <strong th:text="${q.type == 'COKTAN_SECMELI' ? 'Ek Açıklamanız:' : 'Cevabınız:'}"></strong> <span th:text="${answerMap.get(q.id).answerText}"></span>
                 </p>
 
-                <!-- Mentör puan verdiyse göster -->
                 <div th:if="${answerMap.get(q.id).mentorFeedback != null}" class="mentor-feedback">
                     <p><strong>Puan:</strong> <span th:text="${answerMap.get(q.id).mentorScore}"></span>/100</p>
                     <p><strong>Mentör Notu:</strong> <span th:text="${answerMap.get(q.id).mentorFeedback}"></span></p>
                 </div>
 
-                <!-- Eğer soru şıklıysa ve otomatik puanlandıysa mentör onayını beklemeden puanı göster -->
                 <div th:if="${q.type == 'COKTAN_SECMELI' and answerMap.get(q.id).mentorFeedback == null}" style="margin-top: 10px; font-size: 13px; color: #166534; font-weight: bold;">
                     <i class="fas fa-robot"></i> Sistem tarafından otomatik notlandırıldı: Puan <span th:text="${answerMap.get(q.id).mentorScore}"></span>
                 </div>
 
-                <!-- Klasik soruysa ve mentör henüz bakmadıysa -->
                 <div th:if="${q.type != 'COKTAN_SECMELI' and answerMap.get(q.id).mentorFeedback == null}" style="margin-top: 10px; font-size: 12px; color: #d97706;">
                     <i class="fas fa-clock"></i> Mentör onayı bekleniyor.
                 </div>
             </div>
 
-            <!-- HENÜZ CEVAPLANMAMIŞSA GÖRÜNTÜLENECEK FORM (GÜNCELLENDİ) -->
-            <form th:unless="${answerMap.containsKey(q.id)}" action="/submit-answer" method="POST" style="margin-top: 15px;">
+            <!-- GÜVENLİK GÜNCELLEMESİ: Form th:action yapısına çevrildi -->
+            <form th:unless="${answerMap.containsKey(q.id)}" th:action="@{/submit-answer}" method="POST" style="margin-top: 15px;">
                 <input type="hidden" name="questionId" th:value="${q.id}">
 
-                <!-- Eğer soru çoktan seçmeli ise şıklar listelenir -->
                 <div th:if="${q.type == 'COKTAN_SECMELI'}" class="options-list" style="background: #eef2ff; border: 1px solid #c7d2fe;">
                     <p style="margin-bottom: 12px; font-size: 13px; color: #4f46e5; font-weight: 600;">
                         <i class="fas fa-info-circle"></i>
@@ -441,7 +433,8 @@
                 </div>
             </div>
 
-            <form th:unless="${answerMap.containsKey(t.id)}" action="/submit-answer" method="POST" style="margin-top: 15px;">
+            <!-- GÜVENLİK GÜNCELLEMESİ: Form th:action yapısına çevrildi -->
+            <form th:unless="${answerMap.containsKey(t.id)}" th:action="@{/submit-answer}" method="POST" style="margin-top: 15px;">
                 <input type="hidden" name="questionId" th:value="${t.id}">
                 <textarea name="answerText" rows="3" placeholder="Raporunuzu yazın..." required></textarea>
                 <button type="submit" style="background-color: #f59e0b;"><i class="fas fa-check"></i> Raporla</button>
@@ -453,7 +446,6 @@
     <!-- SAĞ SÜTUN: BİLDİRİMLER VE MESAJLAR -->
     <aside class="side-panel">
 
-        <!-- BİLDİRİMLER (Masaüstünde görünür, mobilde modal'a taşınır) -->
         <div class="card desktop-duyuru" style="border-top: 3px solid #ef4444;">
             <h3><i class="fas fa-bell"></i> Sistem Duyuruları</h3>
             <div>
@@ -467,7 +459,6 @@
             </div>
         </div>
 
-        <!-- ÖZEL MESAJ KUTUSU (Hem mobilde hem masaüstünde en altta kalır, mükemmel uyum sağlar) -->
         <div class="card" style="border-top: 3px solid #8b5cf6;" th:if="${mentor != null}">
             <h3><i class="fas fa-envelope"></i> Mentörle Mesajlaş</h3>
             <div class="chat-box">
@@ -479,7 +470,8 @@
                     Mentörünüze mesaj gönderin.
                 </div>
             </div>
-            <form action="/send-message" method="POST">
+            <!-- GÜVENLİK GÜNCELLEMESİ: Form th:action yapısına çevrildi -->
+            <form th:action="@{/send-message}" method="POST">
                 <input type="hidden" name="receiverId" th:value="${mentor.id}">
                 <textarea name="content" rows="2" placeholder="Mesajınızı yazın..." required style="margin-bottom: 5px;"></textarea>
                 <button type="submit" style="background-color: #8b5cf6; padding: 8px;"><i class="fas fa-paper-plane"></i> Gönder</button>
@@ -496,7 +488,6 @@
         <i class="fas fa-bell"></i> Sistem Duyuruları
     </h3>
     <div id="mobil-duyuru-icerik">
-        <!-- Veritabanından gelen duyuruları buraya da basıyoruz -->
         <div th:each="notif : ${notifications}" class="notification-item" style="border-bottom: 1px solid #e2e8f0; padding: 10px 0;">
             <span style="font-weight: 600; color: #0f172a;" th:text="${#temporals.format(notif.createdAt, 'dd.MM.yyyy')}"></span><br>
             <span th:text="${notif.message}"></span>
@@ -508,10 +499,9 @@
     <button class="modal-kapat-btn" onclick="duyurulariMobildeKapat()">Kapat</button>
 </div>
 
-<!-- JAVASCRIPT: 99+ Mantığı ve Modal Kontrolü -->
+<!-- JAVASCRIPT: Rozet ve Modal Kontrolü -->
 <script>
     window.onload = function() {
-        // Thymeleaf tarafından yazdırılan gerçek sayıyı al
         let rozet = document.getElementById("zil-rozeti");
         if (rozet) {
             let bildirimSayisi = parseInt(rozet.innerText) || 0;
@@ -533,6 +523,34 @@
         document.getElementById("modal-overlay").style.display = "none";
         document.getElementById("mobil-duyuru-modal").style.display = "none";
     }
+</script>
+
+<!-- YENİ KAYIT 7: SweetAlert2 Bildirim Kontrolü -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var successMessage = /*[[${successMessage}]]*/ null;
+    var errorMsg = /*[[${error}]]*/ null;
+
+    if (successMessage) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Başarılı!',
+            text: successMessage,
+            confirmButtonColor: '#3b82f6',
+            timer: 3000,
+            timerProgressBar: true
+        });
+    }
+
+    if (errorMsg) {
+        Swal.fire({
+            icon: 'error',
+            title: 'İşlem Başarısız',
+            text: errorMsg,
+            confirmButtonColor: '#ef4444'
+        });
+    }
+    /*]]>*/
 </script>
 
 </body>

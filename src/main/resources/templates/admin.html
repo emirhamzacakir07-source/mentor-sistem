@@ -6,6 +6,8 @@
     <title>Yönetici Paneli - Gençlik Akademisi</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- YENİ KAYIT 7: SweetAlert2 Kütüphanesi -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* GENEL AYARLAR */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
@@ -169,7 +171,7 @@
                     <div id="siklarAlani" class="secenekler-alani">
                         <label style="color:#0f172a; border-bottom:1px solid #ccc; padding-bottom:5px;">Şıkları ve Her Şıkkın Puan Değerini Giriniz:</label>
 
-                        <!-- YENİ EKLENEN: ÇOKLU SEÇİM AYARI KUTUCUĞU -->
+                        <!-- ÇOKLU SEÇİM AYARI KUTUCUĞU -->
                         <div class="coklu-secim-kutusu">
                             <input type="checkbox" name="allowMultipleSelections" value="true" id="cokluSecim">
                             <label for="cokluSecim">Öğrenci birden fazla şıkkı (Örn: A ve C) aynı anda seçebilsin.</label>
@@ -238,7 +240,7 @@
         </div>
     </section>
 
-    <!-- YENİ EKLENEN SEKME: ÖĞRENCİ CEVAPLARI VE YAPAY ZEKA NOTLARI -->
+    <!-- ÖĞRENCİ CEVAPLARI VE YAPAY ZEKA NOTLARI -->
     <section id="cevaplar" class="content-section">
         <div class="card" style="border-top: 4px solid #10b981;">
             <div class="card-header"><i class="fas fa-robot"></i> Öğrenci Cevapları ve Yapay Zeka Analizleri</div>
@@ -296,6 +298,13 @@
 
         <div class="card">
             <div class="card-header"><i class="fas fa-id-card"></i> Sisteme Kayıtlı Aktif Kullanıcılar</div>
+            <!--
+                GÜVENLİK/GİZLİLİK DÜZELTMESİ:
+                Bu tabloda daha önce kullanıcıların şifreleri düz metin olarak
+                gösteriliyordu ("Şifre" sütunu). Bu hem güvenlik hem de (öğrenciler
+                küçük yaş grubunda olduğu için) gizlilik açısından ciddi bir risk
+                olduğundan sütun tamamen kaldırıldı.
+            -->
             <table class="data-table">
                 <tr><th>İsim Soyisim (Kullanıcı Adı)</th><th>Rol</th><th>Bölge / Kategori</th></tr>
 
@@ -411,5 +420,34 @@
         document.getElementById(sekmeId).classList.add('active');
     }
 </script>
+
+<!-- SweetAlert2 Bildirim Kontrolü (Controller'dan gelen Flash Attribute mesajlarını yakalar) -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var successMessage = /*[[${successMessage}]]*/ null;
+    var errorMsg = /*[[${error}]]*/ null;
+
+    if (successMessage) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Başarılı!',
+            text: successMessage,
+            confirmButtonColor: '#3b82f6',
+            timer: 3000,
+            timerProgressBar: true
+        });
+    }
+
+    if (errorMsg) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Hata!',
+            text: errorMsg,
+            confirmButtonColor: '#ef4444'
+        });
+    }
+    /*]]>*/
+</script>
+
 </body>
 </html>

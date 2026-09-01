@@ -5,12 +5,13 @@ import java.util.List;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    // Giriş yaparken kullanıcı adı ve şifre kontrolü için
-    User findByUsernameAndPassword(String username, String password);
-
-    // Kayıt olurken veya şifre sıfırlarken kullanıcı adının varlığını kontrol etmek için
+    // GÜVENLİK NOTU: Eskiden burada findByUsernameAndPassword(username, password)
+    // diye bir metot vardı; şifreyi düz metin karşılaştırıyordu. Artık şifreler
+    // hash'lendiği için düz metin karşılaştırma anlamsız/güvensiz. Bunun yerine
+    // sadece kullanıcı adına göre bulup, PasswordEncoder.matches() ile
+    // AppController içinde karşılaştırıyoruz.
     User findByUsername(String username);
 
-    // YENİ EKLENDİ: Admin panelinde sadece Mentörleri veya sadece Öğrencileri listelemek için
+    // Admin panelinde sadece Mentörleri veya sadece Öğrencileri listelemek için
     List<User> findByRole(String role);
 }
