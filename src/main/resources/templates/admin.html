@@ -115,7 +115,6 @@
         <div class="admin-profile">
             <span th:text="${session.loggedInUsername}" class="d-none d-md-inline">Admin</span>
             <i class="fas fa-user-shield" style="font-size: 24px; color: #3b82f6;"></i>
-            <!-- YENİ: Her ekranda görünecek sabit çıkış butonu -->
             <a href="/logout" style="color: #ef4444; text-decoration: none; font-weight: 600; margin-left: 15px; border-left: 1px solid #e2e8f0; padding-left: 15px;"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
         </div>
     </header>
@@ -286,6 +285,7 @@
         </div>
     </section>
 
+    <!-- KULLANICILAR (EKSTRA DETAYLI YENİ GÖRÜNÜM) -->
     <section id="kullanicilar" class="content-section">
         <div class="card" style="border-top: 4px solid #f59e0b; margin-bottom: 25px;">
             <div class="card-header"><i class="fas fa-user-clock"></i> Onay Bekleyen Mentörler</div>
@@ -313,29 +313,79 @@
             </div>
             <div class="table-responsive">
                 <table class="data-table">
-                    <tr><th>İsim Soyisim</th><th>Rol</th><th>Bölge/Kategori</th><th>İşlemler (Şifre & Analiz)</th></tr>
+                    <tr>
+                        <th>İsim Soyisim (K.Adı)</th>
+                        <th>Rol / Cinsiyet</th>
+                        <th>İletişim Bilgileri</th>
+                        <th>Eğitim / Bölge Bilgisi</th>
+                        <th>İşlemler (Şifre & Analiz & Sil)</th>
+                    </tr>
                     <tr th:each="user : ${users}" th:if="${user.approved}">
-                        <td th:text="${user.fullName} + ' (' + ${user.username} + ')'"></td>
+                        <!-- İsim ve Kullanıcı Adı -->
+                        <td>
+                            <strong th:text="${user.fullName}"></strong><br>
+                            <span style="font-size:12px; color:#64748b;" th:text="'@' + ${user.username}"></span>
+                        </td>
+
+                        <!-- Rol ve Cinsiyet -->
                         <td>
                             <span th:if="${user.role == 'ADMIN'}" class="badge badge-admin">Yönetici</span>
                             <span th:if="${user.role == 'MENTOR'}" class="badge badge-mentor">Mentör</span>
                             <span th:if="${user.role == 'STUDENT'}" class="badge badge-student">Öğrenci</span>
+                            <br>
+                            <span style="font-size:12px; margin-top:5px; display:inline-block; font-weight:600; color:#475569;" th:text="${user.gender != null ? user.gender : '-'}"></span>
                         </td>
-                        <td th:text="${user.role == 'MENTOR' ? (user.region != null ? user.region : 'Genel') : (user.gradeClass != null ? user.gradeClass : 'Belirtilmemiş')}"></td>
+
+                        <!-- İletişim Bilgileri (Kişisel Tel + Veli Tel) -->
+                        <td style="font-size:13px; color:#334155;">
+                            <div th:if="${user.personalPhone != null and user.personalPhone != ''}">
+                                <i class="fas fa-mobile-alt" style="color:#64748b; margin-right:3px;"></i> <span th:text="${user.personalPhone}"></span>
+                            </div>
+                            <div th:if="${user.parentPhone != null and user.parentPhone != ''}" style="margin-top:3px;">
+                                <i class="fas fa-user-friends" style="color:#64748b; margin-right:3px;"></i> <span th:text="'Veli: ' + ${user.parentPhone}"></span>
+                            </div>
+                            <div th:if="${(user.personalPhone == null or user.personalPhone == '') and (user.parentPhone == null or user.parentPhone == '')}" style="color:#94a3b8; font-style:italic;">Belirtilmemiş</div>
+                        </td>
+
+                        <!-- Eğitim (Okul, Sınıf) / Bölge (Şehir, İlçe) -->
+                        <td style="font-size:13px; color:#334155;">
+                            <!-- Öğrenciyse -->
+                            <div th:if="${user.role == 'STUDENT'}">
+                                <i class="fas fa-school" style="color:#64748b; margin-right:3px;"></i> <strong th:text="${user.school}"></strong><br>
+                                <i class="fas fa-book-reader" style="color:#64748b; margin-right:3px;"></i> <span th:text="${user.gradeClass != null ? user.gradeClass + '. Sınıf' : ''}"></span><br>
+                                <i class="fas fa-map-marker-alt" style="color:#64748b; margin-right:3px;"></i> <span th:text="${user.city != null ? user.city : ''} + (${user.region != null ? ' / ' + user.region : ''})"></span>
+                            </div>
+                            <!-- Mentörse -->
+                            <div th:if="${user.role == 'MENTOR'}">
+                                <i class="fas fa-map-marker-alt" style="color:#64748b; margin-right:3px;"></i> <span th:text="${user.city != null ? user.city : ''} + (${user.region != null ? ' / ' + user.region : ''})"></span>
+                            </div>
+                            <div th:if="${user.role == 'ADMIN'}" style="color:#94a3b8; font-style:italic;">Sistem Yöneticisi</div>
+                        </td>
+
+                        <!-- Butonlar -->
                         <td>
                             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <!-- Şifre Yenileme -->
                                 <form th:unless="${user.role == 'ADMIN'}" action="/admin/reset-password" method="POST" style="display: flex; gap: 5px; margin: 0;">
                                     <input type="hidden" name="userId" th:value="${user.id}">
                                     <input type="text" name="newPassword" placeholder="Yeni Şifre" required style="padding: 4px 8px; font-size: 12px; width: 110px;">
-                                    <button type="submit" style="padding: 4px 8px; font-size: 12px; background-color: #f59e0b;">Yenile</button>
+                                    <button type="submit" style="padding: 4px 8px; font-size: 12px; background-color: #f59e0b;"><i class="fas fa-key"></i> Yenile</button>
                                 </form>
-                                <!-- YENİ: Admin için de AI Karne Çıkarma Butonu -->
+
+                                <!-- AI Karne -->
                                 <form th:if="${user.role == 'STUDENT'}" action="/admin/ai-report" method="POST" style="margin: 0;">
                                     <input type="hidden" name="studentId" th:value="${user.id}">
-                                    <button type="submit" style="padding: 4px 8px; font-size: 12px; background-color: #8b5cf6; border: none; border-radius: 6px; color: white; cursor: pointer;"><i class="fas fa-brain"></i> AI Karne Çıkar</button>
+                                    <button type="submit" style="padding: 4px 8px; font-size: 12px; background-color: #8b5cf6; border: none; border-radius: 6px; color: white; cursor: pointer;"><i class="fas fa-brain"></i> AI Karne</button>
+                                </form>
+
+                                <!-- Kullanıcı Silme Butonu -->
+                                <form th:unless="${user.role == 'ADMIN'}" action="/admin/delete-user" method="POST" style="margin: 0;">
+                                    <input type="hidden" name="userId" th:value="${user.id}">
+                                    <button type="submit" style="padding: 4px 8px; font-size: 12px; background-color: #ef4444; border: none; border-radius: 6px; color: white; cursor: pointer;" onclick="return confirm('Bu kullanıcıyı ve ona ait TÜM kayıtları (mesajlar, cevaplar) silmek istediğinize emin misiniz? Bu işlem geri alınamaz!');">
+                                        <i class="fas fa-trash"></i> Sil
+                                    </button>
                                 </form>
                             </div>
-                            <span th:if="${user.role == 'ADMIN'}" style="font-size: 12px; color: #94a3b8;">Sistem Yöneticisi</span>
                         </td>
                     </tr>
                 </table>
@@ -444,7 +494,6 @@
     var successMessage = /*[[${successMessage}]]*/ null;
     var errorMsg = /*[[${error}]]*/ null;
 
-    // YENİ: AI Analiz raporu alt alta satır satır gelsin diye "text" yerine "html" kullanıyoruz ve \n'leri <br>'ye çeviriyoruz.
     if (successMessage) {
         Swal.fire({
             icon: 'success',

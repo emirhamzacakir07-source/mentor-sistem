@@ -13,6 +13,7 @@ import java.io.PrintWriter;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,6 @@ public class AppController {
 
     @PostMapping("/login")
     public String login(@RequestParam String username, @RequestParam String password, HttpSession session, RedirectAttributes redirectAttributes) {
-        // Önlem 1: Boşlukları temizle
         username = username.trim();
         password = password.trim();
 
@@ -117,7 +117,6 @@ public class AppController {
         user.setLastLoginDate(LocalDateTime.now());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        // BUG FIX: Veritabanına anında yazıp, oturumu sıfırlıyoruz.
         userRepository.saveAndFlush(user);
         session.invalidate();
 
@@ -226,6 +225,9 @@ public class AppController {
 
         List<User> allUsers = new ArrayList<>();
         userRepository.findAll().forEach(allUsers::add);
+
+        // YENİ: Listeyi ID'ye göre küçükten büyüğe sıralar. Böylece yeni kayıtlar EN ALTA gider.
+        allUsers.sort(Comparator.comparing(User::getId));
         model.addAttribute("users", allUsers);
 
         List<Answer> allAnswers = new ArrayList<>();
@@ -288,7 +290,7 @@ public class AppController {
         return "admin";
     }
 
-    // YENİ: Excel İndirme Metodu
+    // YENİ: Excel Çıktısı (Tüm Bilgiler Eklendi)
     @GetMapping("/admin/export-users")
     public void exportUsersToCSV(HttpServletResponse response, HttpSession session) throws Exception {
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return;
@@ -297,21 +299,28 @@ public class AppController {
         response.setHeader("Content-Disposition", "attachment; filename=\"dijital_gelisim_kullanicilar.csv\"");
 
         PrintWriter writer = response.getWriter();
-        writer.write('\uFEFF'); // Türkçe Karakter Desteği (BOM)
-        writer.println("Ad Soyad,Kullanici Adi,Rol,Telefon,Okul,Sinif veya Bolge,Atanan Mentor ID");
+        writer.write('\uFEFF'); // Türkçe Karakter Desteği
+        writer.println("Ad Soyad,Kullanici Adi,Rol,Cinsiyet,Ogrenci Telefonu,Veli Telefonu,Sehir,Ilce,Okul,Sinif,Atanan Mentor ID");
 
-        for (User u : userRepository.findAll()) {
-            String phone = u.getPersonalPhone() != null ? u.getPersonalPhone() : (u.getParentPhone() != null ? u.getParentPhone() : "Yok");
-            String detail = "MENTOR".equals(u.getRole()) ? (u.getRegion() != null ? u.getRegion() : "") : (u.getGradeClass() != null ? u.getGradeClass() : "");
+        List<User> allUsers = new ArrayList<>();
+        userRepository.findAll().forEach(allUsers::add);
+        allUsers.sort(Comparator.comparing(User::getId));
+
+        for (User u : allUsers) {
+            String personalPhone = u.getPersonalPhone() != null ? u.getPersonalPhone() : "";
+            String parentPhone = u.getParentPhone() != null ? u.getParentPhone() : "";
+            String gender = u.getGender() != null ? u.getGender() : "";
+            String city = u.getCity() != null ? u.getCity() : "";
+            String region = u.getRegion() != null ? u.getRegion() : "";
             String school = u.getSchool() != null ? u.getSchool() : "";
+            String gradeClass = u.getGradeClass() != null ? u.getGradeClass() : "";
             String mentorId = u.getAssignedMentorId() != null ? u.getAssignedMentorId().toString() : "";
 
-            writer.printf("%s,%s,%s,%s,%s,%s,%s\n",
-                    u.getFullName(), u.getUsername(), u.getRole(), phone, school, detail, mentorId);
+            writer.printf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+                    u.getFullName(), u.getUsername(), u.getRole(), gender, personalPhone, parentPhone, city, region, school, gradeClass, mentorId);
         }
     }
 
-    // YENİ: Admin Şifre Sıfırlama
     @PostMapping("/admin/reset-password")
     public String adminResetPassword(@RequestParam Long userId, @RequestParam String newPassword, HttpSession session, RedirectAttributes redirectAttributes) {
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
@@ -327,7 +336,34 @@ public class AppController {
         return "redirect:/admin";
     }
 
-    // YENİ: Admin AI Karne Çıkarma (Mentör yetkisi Admin'e de verildi)
+    // YENİ: Kullanıcıyı mesajları ve cevaplarıyla birlikte tamamen silme
+    @PostMapping("/admin/delete-user")
+    public String deleteUser(@RequestParam Long userId, HttpSession session, RedirectAttributes redirectAttributes) {
+        if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
+
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            // 1. Öğrenciye ait tüm cevapları temizle
+            List<Answer> userAnswers = answerRepository.findByStudentId(userId);
+            if (userAnswers != null && !userAnswers.isEmpty()) {
+                answerRepository.deleteAll(userAnswers);
+            }
+
+            // 2. Kullanıcının dahil olduğu tüm mesajları temizle
+            List<Message> userMessages = messageRepository.findBySenderIdOrReceiverIdOrderBySentAtAsc(userId, userId);
+            if (userMessages != null && !userMessages.isEmpty()) {
+                messageRepository.deleteAll(userMessages);
+            }
+
+            // 3. Kullanıcıyı sil
+            userRepository.delete(user);
+            redirectAttributes.addFlashAttribute("successMessage", user.getFullName() + " adlı kullanıcı ve ona ait tüm veriler sistemden kalıcı olarak silindi.");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Kullanıcı bulunamadı.");
+        }
+        return "redirect:/admin";
+    }
+
     @PostMapping("/admin/ai-report")
     public String adminAiReport(@RequestParam Long studentId, HttpSession session, RedirectAttributes redirectAttributes) {
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
@@ -338,7 +374,6 @@ public class AppController {
             List<String> answerTexts = last5Answers.stream().map(Answer::getAnswerText).collect(Collectors.toList());
             String report = aiService.analyzeStudentPerformance(student.getFullName(), answerTexts);
 
-            // Sonucu adminin ekranında büyük popup ile göstermek için
             redirectAttributes.addFlashAttribute("successMessage", "YAPAY ZEKA ANALİZİ:\n" + report);
         } else {
             redirectAttributes.addFlashAttribute("error", "Öğrenci bulunamadı.");
@@ -577,7 +612,6 @@ public class AppController {
 
         boolean isEighthGrade = student != null && student.getGradeClass() != null && student.getGradeClass().contains("8");
 
-        // 24 Saat filtrelemesi iptal edildi. Öğrenci artık açık olan tüm aktif soruları görecek.
         List<Question> availableQuestions = allQuestions.stream()
                 .filter(q -> !q.isEighthGradeOnly() || isEighthGrade)
                 .collect(Collectors.toList());
@@ -589,14 +623,12 @@ public class AppController {
         Map<Long, Answer> answerMap = new HashMap<>();
         for (Answer a : answers) { answerMap.put(a.getQuestionId(), a); }
 
-        // YENİ: Öğrenci için sadece Kendi Mentörünün Duyurularını Filtreleme
         List<Notification> allNotifs = new ArrayList<>();
         notificationRepository.findAll().forEach(allNotifs::add);
         List<Notification> myNotifs = new ArrayList<>();
         if (mentor != null) {
-            String mentorName = mentor.getUsername(); // Mentörün gönderdiği isim formatına göre
+            String mentorName = mentor.getUsername();
             for(Notification n : allNotifs) {
-                // Sadece içinde mentörün adı/kullanıcı adı geçen duyuruları ekle (İzolasyon)
                 if(n.getMessage().contains(mentorName) || n.getMessage().contains(mentor.getFullName())) {
                     myNotifs.add(n);
                 }
@@ -627,7 +659,6 @@ public class AppController {
 
         if (!"STUDENT".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
 
-        // GÜVENLİK: Kilit Kontrolü
         if (!isSystemOpen(LocalDateTime.now())) {
             redirectAttributes.addFlashAttribute("error", "Görev ve vazife gönderme süresi kapalıdır. Sadece Perşembe 18:00 - Cuma 18:00 arası işlem yapabilirsiniz.");
             return "redirect:/student";
@@ -644,19 +675,16 @@ public class AppController {
         a.setAnswerText(answerText != null ? answerText : "");
         a.setCreatedAt(LocalDateTime.now());
 
-        // YENİ: Vazife Puanlama ve Gün Kaydı Mantığı
         if (question.isTask()) {
             a.setCompleted(true);
             if (completedDays != null) {
                 a.setCompletedDays(completedDays);
-                // Günlük Puan * Seçilen Gün = Toplam Kazanılan Puan
                 int dailyPoint = (question.getMaxPoints() != null) ? question.getMaxPoints() : 0;
                 a.setMentorScore(dailyPoint * completedDays);
             } else {
                 a.setMentorScore(0);
             }
         }
-        // YENİ: Çoktan Seçmeli (Soru) Puanlama Mantığı
         else if ("COKTAN_SECMELI".equals(question.getType())) {
             a.setCompleted(false);
             int totalScore = 0;
