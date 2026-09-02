@@ -2,14 +2,14 @@
 <html lang="tr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Kayıt Ol - Liderlik Akademisi</title>
+    <title>Kayıt Ol - Dijital Gelişim Programı</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { margin: 0; padding: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Montserrat', Arial, sans-serif; color: #333; }
         .arkaplan-resmi { position: fixed; top: -5%; left: -5%; width: 110%; height: 110%; background-image: url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1920&auto=format&fit=crop'); background-size: cover; background-position: center; filter: blur(10px) brightness(0.65); z-index: -1; }
-        .card { background-color: rgba(255, 255, 255, 0.92); border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); border: none; padding: 40px; }
+        .card { background-color: rgba(255, 255, 255, 0.92); border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); border: none; padding: 40px; margin: 20px 0; }
         .form-title { font-weight: 800; color: #2c3e50; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 30px; }
         .form-label { font-weight: 700; font-size: 0.9rem; color: #444; }
         .form-control, .form-select { padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-family: 'Montserrat', sans-serif; font-weight: 600; }
@@ -25,11 +25,12 @@
 
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-9 col-lg-8">
+        <div class="col-md-10 col-lg-8">
             <div class="card">
                 <h3 class="text-center form-title">Öğrenci Kayıt Formu</h3>
 
-                <form th:action="@{/register}" method="post">
+                <!-- form gönderiminde boşluk temizliği eklendi -->
+                <form th:action="@{/register}" method="post" onsubmit="temizle()">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Ad Soyad</label>
@@ -37,13 +38,19 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Kullanıcı Adı</label>
-                            <input type="text" class="form-control" name="username" placeholder="Sisteme giriş için" required>
+                            <input type="text" class="form-control" name="username" id="username" placeholder="Sisteme giriş için" required>
                         </div>
 
+                        <!-- ŞİFRE TEKRARI -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Şifre Belirle</label>
-                            <input type="password" class="form-control" name="password" placeholder="Güçlü bir şifre" required>
+                            <input type="password" class="form-control" name="password" id="password" placeholder="Güçlü bir şifre" required>
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Şifre Tekrarı</label>
+                            <input type="password" class="form-control" name="passwordConfirm" id="passwordConfirm" placeholder="Şifrenizi tekrar girin" required>
+                        </div>
+
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Cinsiyet</label>
                             <select class="form-select" name="gender" required>
@@ -52,8 +59,11 @@
                                 <option value="Erkek">Erkek</option>
                             </select>
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Öğrenci Telefon (Varsa)</label>
+                            <input type="text" class="form-control" name="personalPhone" placeholder="05XX XXX XX XX">
+                        </div>
 
-                        <!-- YENİ DİNAMİK ŞEHİR ALANI -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Şehir</label>
                             <select class="form-select" name="city" id="sehirSecim" onchange="ilceleriYukle()" required>
@@ -65,8 +75,6 @@
                                 <option value="Diğer">Diğer</option>
                             </select>
                         </div>
-
-                        <!-- YENİ DİNAMİK İLÇE ALANI -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label">İlçe / Bölge</label>
                             <select class="form-select" name="region" id="ilceSecim" required disabled>
@@ -74,22 +82,24 @@
                             </select>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Öğrenci Telefon (Varsa)</label>
-                            <input type="text" class="form-control" name="personalPhone" placeholder="05XX XXX XX XX">
-                        </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Veli Telefon</label>
                             <input type="text" class="form-control" name="parentPhone" placeholder="05XX XXX XX XX" required>
                         </div>
-
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Okul</label>
                             <input type="text" class="form-control" name="school" placeholder="Okulunuzun Adı" required>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <!-- SINIF DROPDOWN EKLENDİ -->
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Sınıfı</label>
-                            <input type="text" class="form-control" name="gradeClass" placeholder="Örn: 7/B" required>
+                            <select class="form-select" name="gradeClass" required>
+                                <option value="" disabled selected>Seçiniz</option>
+                                <option value="5">5. Sınıf</option>
+                                <option value="6">6. Sınıf</option>
+                                <option value="7">7. Sınıf</option>
+                                <option value="8">8. Sınıf</option>
+                            </select>
                         </div>
                     </div>
 
@@ -104,7 +114,6 @@
     </div>
 </div>
 
-<!-- DİNAMİK ŞEHİR-İLÇE YÜKLEME SCRİPTİ -->
 <script>
     const sehirIlceMap = {
         "Konya": ["Meram", "Selçuklu", "Karatay", "Ereğli", "Akşehir", "Beyşehir", "Diğer"],
@@ -118,37 +127,30 @@
         const sehirSelect = document.getElementById("sehirSecim");
         const ilceSelect = document.getElementById("ilceSecim");
         const secilenSehir = sehirSelect.value;
-
-        // İlçe kutusunu sıfırla
         ilceSelect.innerHTML = '<option value="" disabled selected>İlçe / Bölge Seçin</option>';
 
         if (secilenSehir && sehirIlceMap[secilenSehir]) {
-            const ilceler = sehirIlceMap[secilenSehir];
-
-            // Seçilen şehre ait ilçeleri döngüyle ekle
-            ilceler.forEach(function(ilce) {
+            sehirIlceMap[secilenSehir].forEach(function(ilce) {
                 const option = document.createElement("option");
-                option.value = ilce;
-                option.text = ilce;
+                option.value = ilce; option.text = ilce;
                 ilceSelect.appendChild(option);
             });
-
-            // İlçe kutusunun kilidini aç
             ilceSelect.disabled = false;
         } else {
-            // Şehir seçilmemişse kutuyu kilitle
             ilceSelect.innerHTML = '<option value="" disabled selected>Önce Şehir Seçin</option>';
             ilceSelect.disabled = true;
         }
     }
-</script>
 
+    function temizle() {
+        document.getElementById('username').value = document.getElementById('username').value.trim();
+        document.getElementById('password').value = document.getElementById('password').value.trim();
+        document.getElementById('passwordConfirm').value = document.getElementById('passwordConfirm').value.trim();
+    }
+</script>
 <script th:inline="javascript">
-    /*<![CDATA[*/
     var errorMsg = /*[[${error}]]*/ null;
     if (errorMsg) { Swal.fire({ icon: 'error', title: 'Kayıt Başarısız', text: errorMsg, confirmButtonColor: '#28a745' }); }
-    /*]]>*/
 </script>
-
 </body>
 </html>

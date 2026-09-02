@@ -36,6 +36,9 @@ public class Answer {
     @Column(columnDefinition = "boolean default false")
     private Boolean isMonthlyReset;
 
+    // YENİ EKLENEN: Öğrencinin vazifeyi kaç gün uyguladığı (0-7 arası)
+    private Integer completedDays;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -76,7 +79,10 @@ public class Answer {
     public Boolean isCompleted() { return isCompleted != null ? isCompleted : false; }
     public void setCompleted(Boolean completed) { this.isCompleted = completed; }
 
-    // YENİ GETTER/SETTER
     public Boolean isMonthlyReset() { return isMonthlyReset != null ? isMonthlyReset : false; }
     public void setMonthlyReset(Boolean monthlyReset) { this.isMonthlyReset = monthlyReset; }
+
+    // YENİ GETTER/SETTER (Günlük vazife seçimi için)
+    public Integer getCompletedDays() { return completedDays; }
+    public void setCompletedDays(Integer completedDays) { this.completedDays = completedDays; }
 }

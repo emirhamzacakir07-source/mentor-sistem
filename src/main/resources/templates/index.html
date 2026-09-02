@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giriş - Mentörlük Programı</title>
+    <title>Giriş - Dijital Gelişim Programı</title>
 
     <!-- Google Fonts ve İkonlar -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
@@ -151,7 +151,6 @@
             gap: 15px;
         }
 
-        /* Erişilebilirlik: Görsel olarak gizli ama ekran okuyucular için görünür etiketler */
         .sr-only {
             position: absolute;
             width: 1px;
@@ -196,11 +195,6 @@
 
         button:hover {
             background-color: #0056b3;
-        }
-
-        button:disabled {
-            background-color: #99c2ff;
-            cursor: not-allowed;
         }
 
         .alt-linkler {
@@ -251,7 +245,7 @@
 
 <div class="arkaplan-resmi"></div>
 
-<h1 class="baslik-yazisi">ORTAOKUL MENTÖRLÜK PROGRAMI</h1>
+<h1 class="baslik-yazisi">DİJİTAL GELİŞİM PROGRAMI</h1>
 <div class="alt-baslik">Hayat Boyu Rehberlik, Sonsuz Potansiyel</div>
 
 <div class="ana-duzen">
@@ -281,9 +275,10 @@
 
     <!-- ORTA PANEL: Giriş Formu -->
     <div class="giris-kutusu">
-        <img src="https://i.ibb.co/hF8nsNcF/Whats-App-mage-2026-08-28-at-20-10-26.jpg" alt="Mentörlük Programı" class="ortadaki-foto">
+        <img src="https://i.ibb.co/hF8nsNcF/Whats-App-mage-2026-08-28-at-20-10-26.jpg" alt="Dijital Gelişim Programı" class="ortadaki-foto">
 
-        <form th:action="@{/login}" method="POST" autocomplete="on">
+        <!-- Form gönderilmeden önce boşlukları temizleyen onsubmit eklendi -->
+        <form th:action="@{/login}" method="POST" autocomplete="on" onsubmit="temizle()">
 
             <input type="hidden" th:if="${_csrf}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
@@ -335,6 +330,16 @@
     </div>
 
 </div>
+
+<!-- Form gönderilmeden önce boşluk temizleme JS kodu -->
+<script>
+    function temizle() {
+        var userField = document.getElementById('username');
+        var passField = document.getElementById('password');
+        userField.value = userField.value.trim();
+        passField.value = passField.value.trim();
+    }
+</script>
 
 <!-- SweetAlert2 Bildirim Kontrolü -->
 <script th:inline="javascript">

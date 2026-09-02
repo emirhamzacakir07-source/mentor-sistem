@@ -3,91 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mentör Başvuru Portalı</title>
+    <title>Mentör Başvuru Portalı - Dijital Gelişim Programı</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- YENİ KAYIT 7: SweetAlert2 Kütüphanesi Eklendi -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
-
-        /* ARKAPLAN: Bulanıklaştırılmış Sınıf/Öğretmen Fotoğrafı */
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
-            background-size: cover;
-            position: relative;
-        }
-
-        /* Fotoğrafı hafif koyulaştıran ve bulanıklaştıran katman */
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(5px);
-            z-index: 1;
-        }
-
-        /* BUZLU CAM EFEKTLİ BAŞVURU KARTI */
-        .register-container {
-            position: relative;
-            z-index: 2;
-            width: 100%;
-            max-width: 450px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 40px 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            color: #fff;
-        }
-
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed; background-size: cover; position: relative; padding: 20px; }
+        body::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px); z-index: 1; }
+        .register-container { position: relative; z-index: 2; width: 100%; max-width: 450px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 40px 30px; border-radius: 15px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); color: #fff; }
         .header { text-align: center; margin-bottom: 30px; }
         .header h1 { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
         .header p { font-size: 14px; color: #cbd5e1; }
-
         form { display: flex; flex-direction: column; gap: 15px; }
-
         .input-group { position: relative; }
         .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #cbd5e1; }
-
-        input, select {
-            width: 100%;
-            padding: 12px 15px 12px 45px;
-            background: rgba(15, 23, 42, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: #fff;
-            font-size: 14px;
-            outline: none;
-            transition: 0.3s;
-        }
-
+        input, select { width: 100%; padding: 12px 15px 12px 45px; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: #fff; font-size: 14px; outline: none; transition: 0.3s; }
         input::placeholder { color: #94a3b8; }
         input:focus, select:focus { border-color: #3b82f6; background: rgba(15, 23, 42, 0.8); }
-
-        /* Select (Açılır Menü) yazılarının siyah kalmaması için ayar */
         select option { background: #1e293b; color: #fff; }
-
-        button {
-            padding: 15px;
-            background: #3b82f6;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 10px;
-        }
+        button { padding: 15px; background: #3b82f6; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         button:hover { background: #2563eb; transform: translateY(-2px); }
-
         .footer-link { text-align: center; margin-top: 20px; font-size: 13px; }
         .footer-link a { color: #93c5fd; text-decoration: none; font-weight: 600; }
         .footer-link a:hover { color: #bfdbfe; text-decoration: underline; }
@@ -98,75 +34,100 @@
 <div class="register-container">
     <div class="header">
         <h1><i class="fas fa-chalkboard-teacher"></i> Mentör Başvurusu</h1>
-        <p>Liderlik ve Mentörlük Akademisi'ne katılmak için bilgilerinizi doldurun.</p>
+        <p>Dijital Gelişim Programı'na katılmak için formu doldurun.</p>
     </div>
 
-    <!-- GÜVENLİK GÜNCELLEMESİ: CSRF koruması için form action'ı Thymeleaf formatına çevrildi -->
-    <form th:action="@{/mentor-register}" method="POST">
+    <!-- onsubmit event'i eklendi -->
+    <form th:action="@{/mentor-register}" method="POST" onsubmit="temizle()">
         <div class="input-group">
             <i class="fas fa-user"></i>
             <input type="text" name="fullName" placeholder="Adınız ve Soyadınız" required>
         </div>
-
         <div class="input-group">
             <i class="fas fa-id-badge"></i>
-            <input type="text" name="username" placeholder="Kullanıcı Adı Belirleyin" required>
+            <input type="text" name="username" id="username" placeholder="Kullanıcı Adı" required>
         </div>
-
         <div class="input-group">
             <i class="fas fa-phone"></i>
             <input type="text" name="personalPhone" placeholder="Telefon Numaranız" required>
         </div>
 
         <div class="input-group">
-            <i class="fas fa-map-marker-alt"></i>
-            <select name="region" required>
-                <option value="" disabled selected>Bulunduğunuz Bölgeyi Seçin</option>
-                <option value="Meram">Meram</option>
-                <option value="Selçuklu">Selçuklu</option>
-                <option value="Karatay">Karatay</option>
+            <i class="fas fa-city"></i>
+            <select name="city" id="sehirSecim" onchange="ilceleriYukle()" required>
+                <option value="" disabled selected>Şehir Seçin</option>
+                <option value="Konya">Konya</option>
+                <option value="Ankara">Ankara</option>
+                <option value="İstanbul">İstanbul</option>
+                <option value="İzmir">İzmir</option>
                 <option value="Diğer">Diğer</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <i class="fas fa-map-marker-alt"></i>
+            <select name="region" id="ilceSecim" required disabled>
+                <option value="" disabled selected>Önce Şehir Seçin</option>
             </select>
         </div>
 
         <div class="input-group">
             <i class="fas fa-lock"></i>
-            <input type="password" name="password" placeholder="Şifrenizi Belirleyin" required>
+            <input type="password" name="password" id="password" placeholder="Şifre Belirleyin" required>
+        </div>
+        <div class="input-group">
+            <i class="fas fa-key"></i>
+            <input type="password" name="passwordConfirm" id="passwordConfirm" placeholder="Şifrenizi Doğrulayın" required>
         </div>
 
         <button type="submit">Başvuruyu Gönder</button>
     </form>
 
     <div class="footer-link">
-        <a href="/"><i class="fas fa-arrow-left"></i> Ana Sayfaya (Öğrenci Girişi) Dön</a>
+        <a href="/"><i class="fas fa-arrow-left"></i> Ana Sayfaya Dön</a>
     </div>
 </div>
 
-<!-- YENİ KAYIT 7: SweetAlert2 Bildirim Kontrolü -->
-<script th:inline="javascript">
-    /*<![CDATA[*/
-    var successMsg = /*[[${success}]]*/ null;
-    var errorMsg = /*[[${error}]]*/ null;
+<script>
+    const sehirIlceMap = {
+        "Konya": ["Meram", "Selçuklu", "Karatay", "Ereğli", "Akşehir", "Beyşehir", "Diğer"],
+        "Ankara": ["Çankaya", "Keçiören", "Yenimahalle", "Mamak", "Etimesgut", "Sincan", "Diğer"],
+        "İstanbul": ["Kadıköy", "Beşiktaş", "Şişli", "Üsküdar", "Esenyurt", "Pendik", "Diğer"],
+        "İzmir": ["Buca", "Karşıyaka", "Bornova", "Konak", "Karabağlar", "Çiğli", "Diğer"],
+        "Diğer": ["Merkez", "İlçe", "Köy"]
+    };
 
-    if (successMsg) {
-        Swal.fire({
-            icon: 'success',
-            title: 'Başvuru Alındı!',
-            text: 'Başvurunuz başarıyla kaydedildi. Yönetici onayından sonra sisteme giriş yapabilirsiniz.',
-            confirmButtonColor: '#3b82f6'
-        });
+    function ilceleriYukle() {
+        const sehirSelect = document.getElementById("sehirSecim");
+        const ilceSelect = document.getElementById("ilceSecim");
+        const secilenSehir = sehirSelect.value;
+        ilceSelect.innerHTML = '<option value="" disabled selected>İlçe Seçin</option>';
+
+        if (secilenSehir && sehirIlceMap[secilenSehir]) {
+            sehirIlceMap[secilenSehir].forEach(function(ilce) {
+                const option = document.createElement("option");
+                option.value = ilce; option.text = ilce;
+                ilceSelect.appendChild(option);
+            });
+            ilceSelect.disabled = false;
+        } else {
+            ilceSelect.innerHTML = '<option value="" disabled selected>Önce Şehir Seçin</option>';
+            ilceSelect.disabled = true;
+        }
     }
 
-    if (errorMsg) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Başvuru Hatası',
-            text: errorMsg,
-            confirmButtonColor: '#ef4444'
-        });
+    // Boşluk temizleyici fonksiyon
+    function temizle() {
+        document.getElementById('username').value = document.getElementById('username').value.trim();
+        document.getElementById('password').value = document.getElementById('password').value.trim();
+        document.getElementById('passwordConfirm').value = document.getElementById('passwordConfirm').value.trim();
     }
-    /*]]>*/
 </script>
 
+<script th:inline="javascript">
+    var successMsg = /*[[${success}]]*/ null;
+    var errorMsg = /*[[${error}]]*/ null;
+    if (successMsg) { Swal.fire({ icon: 'success', title: 'Başvuru Alındı!', text: 'Başvurunuz başarıyla kaydedildi. Yönetici onayının ardından giriş yapabilirsiniz.', confirmButtonColor: '#3b82f6' }); }
+    if (errorMsg) { Swal.fire({ icon: 'error', title: 'Başvuru Hatası', text: errorMsg, confirmButtonColor: '#ef4444' }); }
+</script>
 </body>
 </html>

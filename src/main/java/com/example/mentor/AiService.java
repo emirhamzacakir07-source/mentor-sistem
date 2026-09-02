@@ -7,106 +7,83 @@ import java.util.Locale;
 @Service
 public class AiService {
 
-    // MEVCUT KODUN (Korundu) - Duygu ve Stres Analizi
+    // 1. ANLIK DURUM ANALİZİ: Öğrenci cevap gönderdiğinde sistemin genel durum tespiti
     public String analyzeText(String text) {
-        // GÜVENLİK: Eğer metin boş gelirse sistem çökmesin, direkt nötr dönsün
+        // GÜVENLİK: Eğer metin boş gelirse veya sadece şık seçildiyse (boş metin)
         if (text == null || text.trim().isEmpty()) {
-            return "🟡 NÖTR: Belirgin bir uç duygu tespit edilemedi. (Metin boş)";
+            return "🔵 KARARLI: Görev odaklı yaklaşım (Sadece şık/görev seçimi yapıldı).";
         }
 
-        // TÜRKÇE DESTEĞİ: Karakterlerin doğru küçülmesi için Locale eklendi
+        // TÜRKÇE DESTEĞİ: Karakterlerin doğru küçülmesi
         String lowerText = text.toLowerCase(new Locale("tr", "TR"));
 
-        if (lowerText.contains("yorgun") || lowerText.contains("kötü") || lowerText.contains("stres") || lowerText.contains("canım sıkkın")) {
-            return "🔴 DİKKAT: Öğrenci stresli veya mutsuz olabilir. Ailesiyle veya birebir iletişim önerilir.";
-        } else if (lowerText.contains("mutlu") || lowerText.contains("iyi") || lowerText.contains("güzel") || lowerText.contains("harika")) {
-            return "🟢 POZİTİF: Öğrencinin motivasyonu yüksek ve durumu iyi görünüyor.";
+        if (lowerText.contains("yorgun") || lowerText.contains("kötü") || lowerText.contains("stres") || lowerText.contains("zor") || lowerText.contains("yapamadım")) {
+            return "🔴 DİKKAT: Öğrenci zorlanıyor veya moralsiz olabilir. Motive edici geri bildirim şart.";
+        } else if (lowerText.contains("mutlu") || lowerText.contains("iyi") || lowerText.contains("başardım") || lowerText.contains("kolay") || lowerText.contains("eğlenceli")) {
+            return "🟢 POZİTİF: Özgüveni yüksek, görevi severek yapıyor.";
         } else {
-            return "🟡 NÖTR: Belirgin bir uç duygu tespit edilemedi. (Rutin durum)";
+            return "🔵 KARARLI: Göreve odaklanmış, stabil bir ilerleyiş sergiliyor.";
         }
     }
 
-    // YENİ KAYIT 4 & 12: Yapay Zeka Toplu Öğrenci Analizi (Veli/Mentör Karnesi)
+    // 2. YENİ: KARAKTER, ALIŞKANLIK VE ZİHNİYET ANALİZİ (3 Maddelik Mentör Raporu)
+    // Mentör "AI Karne Çıkar" butonuna bastığında bu metot çalışır. Not veya puan yoktur.
     public String analyzeStudentPerformance(String studentName, List<String> answers) {
         if (answers == null || answers.isEmpty()) {
-            return studentName + " henüz analiz edilecek yeterli cevap göndermemiştir.";
+            return "⚠️ " + studentName + " henüz analiz edilecek hiçbir vazife/soru yanıtlamamıştır.";
         }
 
         int totalAnswers = answers.size();
-        int lengthScore = 0;
+        boolean isDetailed = false;
+        boolean isAnalytic = false;
+        boolean isShort = false;
+        int totalLength = 0;
 
+        // Öğrencinin tüm cevaplarındaki eğilimleri, alışkanlıkları ve kullandığı bağlaçları tarıyoruz
         for (String ans : answers) {
             if (ans != null) {
-                lengthScore += ans.trim().length();
+                totalLength += ans.trim().length();
+                String lowerAns = ans.toLowerCase(new Locale("tr", "TR"));
+
+                // Analitik zeka ve neden-sonuç kurma becerisi testi
+                if (lowerAns.contains("çünkü") || lowerAns.contains("neden") || lowerAns.contains("bence") || lowerAns.contains("göre") || lowerAns.contains("mesela")) {
+                    isAnalytic = true;
+                }
             }
         }
 
-        int avgLength = totalAnswers > 0 ? lengthScore / totalAnswers : 0;
-        String performanceLevel;
-        String advice;
+        int avgLength = totalAnswers > 0 ? totalLength / totalAnswers : 0;
 
-        if (avgLength > 100) {
-            performanceLevel = "Çok İyi / İleri Düzey";
-            advice = "Öğrenci sorulara detaylı ve analitik yaklaşabiliyor. Düşüncelerini aktarma konusunda çok başarılı. Bu seviyeyi koruması için ekstra araştırmaya dayalı zor sorular verilebilir.";
-        } else if (avgLength > 40) {
-            performanceLevel = "Orta / Gelişime Açık";
-            advice = "Öğrenci temel düzeyde doğru cevaplar veriyor, ancak detaylandırma ve neden-sonuç ilişkisi kurma yeteneği geliştirilebilir. Cevaplarını biraz daha açması teşvik edilmeli.";
-        } else {
-            performanceLevel = "Desteğe İhtiyacı Var";
-            advice = "Öğrenci cevapları çok kısa tutuyor veya konuya odaklanmakta zorlanıyor. Konuyu anladığından emin olmak için birebir görüşme veya daha yönlendirici sorular sorulması önerilir.";
+        // Karakter ve alışkanlık profili belirleme
+        if (avgLength > 80) isDetailed = true;
+        if (avgLength < 25) isShort = true;
+
+        StringBuilder report = new StringBuilder();
+        report.append("🧠 ").append(studentName).append(" - Karakter ve Davranış Analizi\n\n");
+        report.append("Tamamlanan Görev/Soru Sayısı: ").append(totalAnswers).append("\n\n");
+        report.append("📌 YAPAY ZEKA GELİŞİM RAPORU:\n");
+
+        if (isAnalytic && isDetailed) {
+            report.append("1. 🎯 Sorumluluk Bilinci: Verilen vazifeleri geçiştirmek yerine üzerine düşünerek yapıyor. Sorgulayıcı bir zihniyete sahip.\n");
+            report.append("2. 💡 Analitik Düşünme: Olaylar arasında neden-sonuç ilişkisi kurabiliyor. Kendi fikirlerini (bence, çünkü) katmayı seviyor.\n");
+            report.append("3. 🚀 Mentör Tavsiyesi: Bu öğrencinin potansiyeli yüksek. Ona kuralları dikte etmek yerine, 'Sen olsan ne yapardın?' diyerek liderlik vasfını tetikleyin.");
+        }
+        else if (isDetailed) {
+            report.append("1. 📝 İfade Gücü: Kendini ifade etmeyi ve detaylandırmayı seviyor. İletişime çok açık.\n");
+            report.append("2. 🎯 Odaklanma: Görevlere vakit ayırıyor ancak 'neden-sonuç' bağlamı (analitik düşünce) biraz daha desteklenebilir.\n");
+            report.append("3. 🚀 Mentör Tavsiyesi: Yazmayı sevdiği için ona hislerini ve fikirlerini soran, yoruma dayalı hayat-beceri vazifeleri vermeye devam edin.");
+        }
+        else if (isShort) {
+            report.append("1. ⚡ Hız ve Pratiklik: Görevleri hızlıca bitirme eğiliminde. Detaylarda boğulmayı sevmiyor, sonuç odaklı.\n");
+            report.append("2. 📉 Derinlik İhtiyacı: Seçimlerini yaparken yüzeysel kalıyor veya uzun yazmaktan çabuk sıkılıyor.\n");
+            report.append("3. 🚀 Mentör Tavsiyesi: Uzun metinler okutmak yerine; kısa, oyunlaştırılmış ve '1 ile 7 gün arası tamamla' gibi pratik vazifelerle motivasyonunu artırın.");
+        }
+        else {
+            report.append("1. ⚖️ Dengeli Profil: Vazifeleri gerektiği kadar yapıyor. Ne çok abartıyor ne de görevlerini boşluyor.\n");
+            report.append("2. 🔄 Rutin Uyum: Sisteme ve kurallara kolayca uyum sağlayan, stabil ve söz dinleyen bir karakteri var.\n");
+            report.append("3. 🚀 Mentör Tavsiyesi: Öğrencinin konfor alanından çıkması için arada onu şaşırtacak, kendi sınırlarını zorlayacağı görevler verin.");
         }
 
-        return "📊 " + studentName + " - Gelişim ve Performans Analizi:\n\n" +
-                "Toplam Değerlendirilen Soru: " + totalAnswers + "\n" +
-                "Genel Performans Seviyesi: " + performanceLevel + "\n" +
-                "Mentör/Veli İçin Tavsiye: " + advice;
-    }
-
-    // YENİ KAYIT 20 & 21: Mentör Yokluğunda AI Geri Dönüşü ve Puanlaması (Zaman Aşımı Sonrası)
-    public AiEvaluationResult evaluateAndScoreAnswer(String answerContent, Integer maxPoints) {
-        if (answerContent == null || answerContent.trim().isEmpty()) {
-            return new AiEvaluationResult(0, "Cevap gönderilmediği için değerlendirme yapılamadı.");
-        }
-
-        String lowerText = answerContent.toLowerCase(new Locale("tr", "TR"));
-        int length = answerContent.trim().length();
-        int score = 0;
-        String feedback = "";
-
-        // Uzunluğa ve içeriğe dayalı otomatik puanlama mantığı
-        if (length > 150) {
-            score = maxPoints != null ? maxPoints : 100;
-            feedback = "Harika bir cevap! Konuyu çok detaylı ve güzel açıklamışsın, emek verdiğin çok belli. Bu analitik yaklaşımını korumalısın.";
-        } else if (length > 50) {
-            score = maxPoints != null ? (maxPoints * 75 / 100) : 75;
-            feedback = "Cevabın doğru yönde ve konuyu anladığını gösteriyor. Ancak biraz daha detaylandırarak düşüncelerini daha net ifade edebilirsin.";
-        } else {
-            score = maxPoints != null ? (maxPoints * 40 / 100) : 40;
-            feedback = "Cevabın oldukça kısa kalmış. Bu konuda daha fazla pratik yapmaya ve fikirlerini biraz daha genişletmeye ne dersin?";
-        }
-
-        // Anahtar kelimelere göre ekstra motive edici geri bildirimler
-        if (lowerText.contains("çünkü") || lowerText.contains("neden") || lowerText.contains("dolayı")) {
-            feedback += " Ayrıca cevaplarında neden-sonuç ilişkisi kurmaya çalışman çok değerli bir özellik!";
-        }
-        if (lowerText.contains("örneğin") || lowerText.contains("mesela")) {
-            feedback += " Konuyu örneklerle desteklemen anlatımını çok güçlendirmiş.";
-        }
-
-        return new AiEvaluationResult(score, feedback);
-    }
-
-    // AiService için yardımcı sonuç sınıfı (Puan ve Geri Bildirimi aynı anda döndürmek için)
-    public static class AiEvaluationResult {
-        private int score;
-        private String feedback;
-
-        public AiEvaluationResult(int score, String feedback) {
-            this.score = score;
-            this.feedback = feedback;
-        }
-
-        public int getScore() { return score; }
-        public String getFeedback() { return feedback; }
+        return report.toString();
     }
 }
