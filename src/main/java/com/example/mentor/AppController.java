@@ -3,6 +3,9 @@ package com.example.mentor;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,11 +33,11 @@ public class AppController {
     @Autowired private MessageRepository messageRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
-    // --- ZAMAN KİLİDİ METODU (Sadece Perşembe 18:00 - Cuma 18:00 arası TRUE döner) ---
+    // --- ZAMAN KİLİDİ: Perşembe 18:00 ile Cuma 20:00 arası TRUE döner ---
     private boolean isSystemOpen(LocalDateTime time) {
         DayOfWeek day = time.getDayOfWeek();
         int hour = time.getHour();
-        return (day == DayOfWeek.THURSDAY && hour >= 18) || (day == DayOfWeek.FRIDAY && hour < 18);
+        return (day == DayOfWeek.THURSDAY && hour >= 18) || (day == DayOfWeek.FRIDAY && hour < 20);
     }
 
     @GetMapping("/")
@@ -189,6 +192,14 @@ public class AppController {
         String role = (String) session.getAttribute("loggedInUserRole");
         if (senderId == null) return "redirect:/";
 
+        if (content != null) {
+            content = content.trim();
+            if (content.length() > 1000) {
+                redirectAttributes.addFlashAttribute("error", "Mesajınız çok uzun! Lütfen en fazla 1000 karakter kullanın.");
+                return "MENTOR".equals(role) ? "redirect:/mentor" : "redirect:/student";
+            }
+        }
+
         boolean allowed = false;
         if ("STUDENT".equals(role)) {
             User student = userRepository.findById(senderId).orElse(null);
@@ -215,31 +226,45 @@ public class AppController {
         return "MENTOR".equals(role) ? "redirect:/mentor" : "redirect:/student";
     }
 
-    // --- ADMİN PANELİ ---
     @GetMapping("/admin")
-    public String adminPanel(HttpSession session, Model model) {
+    public String adminPanel(
+            @RequestParam(defaultValue = "0") int ansPage,
+            @RequestParam(defaultValue = "0") int msgPage,
+            HttpSession session, Model model) {
+
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
 
-        model.addAttribute("notifications", notificationRepository.findAll());
+        List<Notification> allNotifs = new ArrayList<>();
+        notificationRepository.findAll().forEach(allNotifs::add);
+
+        LocalDateTime gecenHafta = LocalDateTime.now().minusDays(7);
+
+        List<Notification> aktifBildirimler = allNotifs.stream()
+                .filter(n -> n.getCreatedAt().isAfter(gecenHafta))
+                .sorted((n1, n2) -> n2.getCreatedAt().compareTo(n1.getCreatedAt()))
+                .collect(Collectors.toList());
+
+        List<Notification> gecmisBildirimler = allNotifs.stream()
+                .filter(n -> !n.getCreatedAt().isAfter(gecenHafta))
+                .sorted((n1, n2) -> n2.getCreatedAt().compareTo(n1.getCreatedAt()))
+                .collect(Collectors.toList());
+
+        model.addAttribute("notifications", aktifBildirimler);
+        model.addAttribute("historyNotifications", gecmisBildirimler);
         model.addAttribute("questions", questionRepository.findAll());
 
         List<User> allUsers = new ArrayList<>();
         userRepository.findAll().forEach(allUsers::add);
-
-        // YENİ: Listeyi ID'ye göre küçükten büyüğe sıralar. Böylece yeni kayıtlar EN ALTA gider.
         allUsers.sort(Comparator.comparing(User::getId));
         model.addAttribute("users", allUsers);
 
-        List<Answer> allAnswers = new ArrayList<>();
-        answerRepository.findAll().forEach(allAnswers::add);
-
+        List<Answer> allAnswers = answerRepository.findAll();
         Map<User, Integer> studentScores = new HashMap<>();
         for(User u : allUsers) {
             if("STUDENT".equals(u.getRole())) { studentScores.put(u, 0); }
         }
         for(Answer a : allAnswers) {
             if(a.isMonthlyReset() != null && a.isMonthlyReset()) continue;
-
             if(a.getMentorScore() != null) {
                 User student = userRepository.findById(a.getStudentId()).orElse(null);
                 if(student != null && studentScores.containsKey(student)) {
@@ -257,8 +282,9 @@ public class AppController {
         leaderboard.sort((m1, m2) -> ((Integer) m2.get("score")).compareTo((Integer) m1.get("score")));
         model.addAttribute("leaderboard", leaderboard);
 
+        Page<Answer> answerPage = answerRepository.findAll(PageRequest.of(ansPage, 50, Sort.by(Sort.Direction.DESC, "createdAt")));
         List<Map<String, Object>> adminAnswers = new ArrayList<>();
-        for (Answer ans : allAnswers) {
+        for (Answer ans : answerPage.getContent()) {
             Map<String, Object> map = new HashMap<>();
             map.put("id", ans.getId());
             User std = userRepository.findById(ans.getStudentId()).orElse(null);
@@ -272,10 +298,12 @@ public class AppController {
             adminAnswers.add(map);
         }
         model.addAttribute("adminAnswers", adminAnswers);
+        model.addAttribute("ansPage", ansPage);
+        model.addAttribute("hasNextAns", answerPage.hasNext());
 
-        List<Message> allMessages = messageRepository.findAllByOrderBySentAtDesc();
+        Page<Message> messagePage = messageRepository.findAllByOrderBySentAtDesc(PageRequest.of(msgPage, 50));
         List<Map<String, Object>> adminMessages = new ArrayList<>();
-        for (Message m : allMessages) {
+        for (Message m : messagePage.getContent()) {
             Map<String, Object> map = new HashMap<>();
             User sender = userRepository.findById(m.getSenderId()).orElse(null);
             User receiver = userRepository.findById(m.getReceiverId()).orElse(null);
@@ -286,11 +314,12 @@ public class AppController {
             adminMessages.add(map);
         }
         model.addAttribute("adminMessages", adminMessages);
+        model.addAttribute("msgPage", msgPage);
+        model.addAttribute("hasNextMsg", messagePage.hasNext());
 
         return "admin";
     }
 
-    // YENİ: Excel Çıktısı (Tüm Bilgiler Eklendi)
     @GetMapping("/admin/export-users")
     public void exportUsersToCSV(HttpServletResponse response, HttpSession session) throws Exception {
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return;
@@ -299,7 +328,7 @@ public class AppController {
         response.setHeader("Content-Disposition", "attachment; filename=\"dijital_gelisim_kullanicilar.csv\"");
 
         PrintWriter writer = response.getWriter();
-        writer.write('\uFEFF'); // Türkçe Karakter Desteği
+        writer.write('\uFEFF');
         writer.println("Ad Soyad,Kullanici Adi,Rol,Cinsiyet,Ogrenci Telefonu,Veli Telefonu,Sehir,Ilce,Okul,Sinif,Atanan Mentor ID");
 
         List<User> allUsers = new ArrayList<>();
@@ -316,7 +345,7 @@ public class AppController {
             String gradeClass = u.getGradeClass() != null ? u.getGradeClass() : "";
             String mentorId = u.getAssignedMentorId() != null ? u.getAssignedMentorId().toString() : "";
 
-            writer.printf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+            writer.printf("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n",
                     u.getFullName(), u.getUsername(), u.getRole(), gender, personalPhone, parentPhone, city, region, school, gradeClass, mentorId);
         }
     }
@@ -336,26 +365,33 @@ public class AppController {
         return "redirect:/admin";
     }
 
-    // YENİ: Kullanıcıyı mesajları ve cevaplarıyla birlikte tamamen silme
     @PostMapping("/admin/delete-user")
     public String deleteUser(@RequestParam Long userId, HttpSession session, RedirectAttributes redirectAttributes) {
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
 
         User user = userRepository.findById(userId).orElse(null);
         if (user != null) {
-            // 1. Öğrenciye ait tüm cevapları temizle
             List<Answer> userAnswers = answerRepository.findByStudentId(userId);
             if (userAnswers != null && !userAnswers.isEmpty()) {
                 answerRepository.deleteAll(userAnswers);
             }
 
-            // 2. Kullanıcının dahil olduğu tüm mesajları temizle
             List<Message> userMessages = messageRepository.findBySenderIdOrReceiverIdOrderBySentAtAsc(userId, userId);
             if (userMessages != null && !userMessages.isEmpty()) {
                 messageRepository.deleteAll(userMessages);
             }
 
-            // 3. Kullanıcıyı sil
+            if ("MENTOR".equals(user.getRole())) {
+                List<User> studentsToUpdate = new ArrayList<>();
+                for (User u : userRepository.findAll()) {
+                    if ("STUDENT".equals(u.getRole()) && userId.equals(u.getAssignedMentorId())) {
+                        u.setAssignedMentorId(null);
+                        studentsToUpdate.add(u);
+                    }
+                }
+                if (!studentsToUpdate.isEmpty()) userRepository.saveAll(studentsToUpdate);
+            }
+
             userRepository.delete(user);
             redirectAttributes.addFlashAttribute("successMessage", user.getFullName() + " adlı kullanıcı ve ona ait tüm veriler sistemden kalıcı olarak silindi.");
         } else {
@@ -385,8 +421,7 @@ public class AppController {
     public String resetMonthlyScores(HttpSession session, RedirectAttributes redirectAttributes) {
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
 
-        List<Answer> allAnswers = new ArrayList<>();
-        answerRepository.findAll().forEach(allAnswers::add);
+        List<Answer> allAnswers = answerRepository.findAll();
 
         for(Answer a : allAnswers) {
             a.setMonthlyReset(true);
@@ -404,6 +439,7 @@ public class AppController {
             @RequestParam(required = false, defaultValue = "false") boolean isTask,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String maxPoints,
+            @RequestParam(required = false) Integer targetDays, // YENİ EKLENEN
             @RequestParam(required = false) String optionA_text, @RequestParam(required = false) String optionA_point,
             @RequestParam(required = false) String optionB_text, @RequestParam(required = false) String optionB_point,
             @RequestParam(required = false) String optionC_text, @RequestParam(required = false) String optionC_point,
@@ -420,6 +456,9 @@ public class AppController {
         q.setAllowMultipleSelections(allowMultipleSelections);
         q.setWeekNumber(weekNumber);
         q.setEighthGradeOnly(isEighthGradeOnly);
+
+        // YENİ EKLENEN
+        q.setTargetDays(targetDays != null ? targetDays : 7);
 
         if (q.getId() == null || q.getCreatedAt() == null) { q.setCreatedAt(LocalDateTime.now()); }
         try { q.setMaxPoints((maxPoints != null && !maxPoints.trim().isEmpty()) ? Integer.parseInt(maxPoints) : 0); } catch (Exception e) { q.setMaxPoints(0); }
@@ -538,6 +577,14 @@ public class AppController {
         if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
         Long mentorId = (Long) session.getAttribute("loggedInUserId");
 
+        if (mentorFeedback != null) {
+            mentorFeedback = mentorFeedback.trim();
+            if (mentorFeedback.length() > 1500) {
+                redirectAttributes.addFlashAttribute("error", "Geri bildirim çok uzun! Lütfen en fazla 1500 karakter kullanın.");
+                return "redirect:/mentor";
+            }
+        }
+
         Answer ans = answerRepository.findById(answerId).orElse(null);
         if (ans == null) { redirectAttributes.addFlashAttribute("error", "Cevap bulunamadı."); return "redirect:/mentor"; }
 
@@ -557,6 +604,7 @@ public class AppController {
     public String sendAnnouncement(@RequestParam String message, HttpSession session, RedirectAttributes redirectAttributes) {
         if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
         String mentorName = (String) session.getAttribute("loggedInUsername");
+
         Notification n = new Notification();
         n.setMessage("📢 DUYURU (" + mentorName + "): " + message);
         n.setCreatedAt(LocalDateTime.now());
@@ -585,7 +633,7 @@ public class AppController {
 
     @PostMapping("/mentor/schedule-meeting")
     public String scheduleMeeting(@RequestParam String meetingDate, @RequestParam String meetingLink, HttpSession session, RedirectAttributes redirectAttributes) {
-        if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
+        if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/mentor";
         String mentorName = (String) session.getAttribute("loggedInUsername");
         Notification n = new Notification();
         n.setMessage("📅 TOPLANTI (" + mentorName + "): Yeni bir mentör toplantısı planlandı! Tarih: " + meetingDate + " Link: " + meetingLink);
@@ -660,8 +708,16 @@ public class AppController {
         if (!"STUDENT".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
 
         if (!isSystemOpen(LocalDateTime.now())) {
-            redirectAttributes.addFlashAttribute("error", "Görev ve vazife gönderme süresi kapalıdır. Sadece Perşembe 18:00 - Cuma 18:00 arası işlem yapabilirsiniz.");
+            redirectAttributes.addFlashAttribute("error", "Görev ve vazife gönderme süresi kapalıdır. Sadece Perşembe 18:00 - Cuma 20:00 arası işlem yapabilirsiniz.");
             return "redirect:/student";
+        }
+
+        if (answerText != null) {
+            answerText = answerText.trim();
+            if (answerText.length() > 2500) {
+                redirectAttributes.addFlashAttribute("error", "Cevabınız çok uzun! Lütfen en fazla 2500 karakterlik bir özet geçiniz.");
+                return "redirect:/student";
+            }
         }
 
         Long studentId = (Long) session.getAttribute("loggedInUserId");

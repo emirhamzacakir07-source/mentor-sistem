@@ -29,7 +29,6 @@
             <div class="card">
                 <h3 class="text-center form-title">Öğrenci Kayıt Formu</h3>
 
-                <!-- form gönderiminde boşluk temizliği eklendi -->
                 <form th:action="@{/register}" method="post" onsubmit="temizle()">
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -41,7 +40,6 @@
                             <input type="text" class="form-control" name="username" id="username" placeholder="Sisteme giriş için" required>
                         </div>
 
-                        <!-- ŞİFRE TEKRARI -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Şifre Belirle</label>
                             <input type="password" class="form-control" name="password" id="password" placeholder="Güçlü bir şifre" required>
@@ -90,11 +88,15 @@
                             <label class="form-label">Okul</label>
                             <input type="text" class="form-control" name="school" placeholder="Okulunuzun Adı" required>
                         </div>
-                        <!-- SINIF DROPDOWN EKLENDİ -->
+
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Sınıfı</label>
                             <select class="form-select" name="gradeClass" required>
                                 <option value="" disabled selected>Seçiniz</option>
+                                <option value="1">1. Sınıf</option>
+                                <option value="2">2. Sınıf</option>
+                                <option value="3">3. Sınıf</option>
+                                <option value="4">4. Sınıf</option>
                                 <option value="5">5. Sınıf</option>
                                 <option value="6">6. Sınıf</option>
                                 <option value="7">7. Sınıf</option>
@@ -103,7 +105,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-success w-100 mt-4">Kayıt İşlemini Tamamla</button>
+                    <button type="submit" class="btn btn-success w-100 mt-3">Kayıt İşlemini Tamamla</button>
                 </form>
 
                 <div class="text-center mt-4">
@@ -113,6 +115,8 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
     const sehirIlceMap = {

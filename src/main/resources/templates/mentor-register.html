@@ -37,7 +37,6 @@
         <p>Dijital Gelişim Programı'na katılmak için formu doldurun.</p>
     </div>
 
-    <!-- onsubmit event'i eklendi -->
     <form th:action="@{/mentor-register}" method="POST" onsubmit="temizle()">
         <div class="input-group">
             <i class="fas fa-user"></i>
@@ -115,7 +114,6 @@
         }
     }
 
-    // Boşluk temizleyici fonksiyon
     function temizle() {
         document.getElementById('username').value = document.getElementById('username').value.trim();
         document.getElementById('password').value = document.getElementById('password').value.trim();

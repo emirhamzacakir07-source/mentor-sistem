@@ -1,7 +1,7 @@
 package com.example.mentor;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime; // YENİ EKLENEN: Zaman işlemleri için gerekli kütüphane
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "questions")
@@ -16,14 +16,16 @@ public class Question {
 
     private String type; // KLASIK veya COKTAN_SECMELI
 
-    // KAYIT 1 GÜNCELLEMESİ: Veritabanında ve formlarda null hatası almamak için boolean -> Boolean yapıldı.
     @Column(columnDefinition = "boolean default false")
     private Boolean isTask; // Vazife mi, soru mu?
 
     private String category;
     private Integer maxPoints;
 
-    // GÜVENLİK DOKUNUŞU: Şıklar uzun olursa veritabanı kesmesin diye TEXT yapıldı.
+    // YENİ EKLENEN: Vazifenin kaç günlük olduğu (Örn: 3 günlük kamp)
+    @Column(name = "target_days")
+    private Integer targetDays = 7;
+
     @Column(columnDefinition = "TEXT")
     private String optionA;
     private Integer optionAPoint;
@@ -40,17 +42,15 @@ public class Question {
     private String optionD;
     private Integer optionDPoint;
 
-    // KAYIT 1 GÜNCELLEMESİ: boolean -> Boolean
     @Column(columnDefinition = "boolean default false")
     private Boolean allowMultipleSelections;
 
-    // --- YENİ EKLENEN ÖZELLİKLER (Zaman, Hafta ve 8. Sınıf) ---
-    private LocalDateTime createdAt; // 24 saat kuralı için oluşturulma zamanı
+    private LocalDateTime createdAt;
 
-    private Integer weekNumber; // 1, 2, 3 gibi haftalık arşiv sistemi için
+    private Integer weekNumber;
 
     @Column(columnDefinition = "boolean default false")
-    private Boolean isEighthGradeOnly; // Sadece 8. sınıflara özel filtre
+    private Boolean isEighthGradeOnly;
 
 
     // --- GETTER VE SETTER METOTLARI ---
@@ -64,7 +64,6 @@ public class Question {
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
 
-    // NullPointerException almamak için güvenli dönüş
     public Boolean isTask() { return isTask != null ? isTask : false; }
     public void setTask(Boolean task) { this.isTask = task; }
 
@@ -73,6 +72,10 @@ public class Question {
 
     public Integer getMaxPoints() { return maxPoints; }
     public void setMaxPoints(Integer maxPoints) { this.maxPoints = maxPoints; }
+
+    // YENİ EKLENEN GETTER/SETTER
+    public Integer getTargetDays() { return targetDays; }
+    public void setTargetDays(Integer targetDays) { this.targetDays = targetDays; }
 
     public String getOptionA() { return optionA; }
     public void setOptionA(String optionA) { this.optionA = optionA; }
@@ -98,11 +101,9 @@ public class Question {
     public Integer getOptionDPoint() { return optionDPoint; }
     public void setOptionDPoint(Integer optionDPoint) { this.optionDPoint = optionDPoint; }
 
-    // NullPointerException almamak için güvenli dönüş
     public Boolean isAllowMultipleSelections() { return allowMultipleSelections != null ? allowMultipleSelections : false; }
     public void setAllowMultipleSelections(Boolean allowMultipleSelections) { this.allowMultipleSelections = allowMultipleSelections; }
 
-    // --- YENİ EKLENENLERİN GETTER / SETTER'LARI ---
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 

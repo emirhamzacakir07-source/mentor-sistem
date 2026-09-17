@@ -99,7 +99,7 @@
         <li onclick="degistirSekme('kullanicilar', this); toggleSidebar()"><i class="fas fa-users"></i> Öğrenci & Mentörler</li>
         <li onclick="degistirSekme('atamalar', this); toggleSidebar()"><i class="fas fa-exchange-alt"></i> Mentör Atamaları</li>
         <li onclick="degistirSekme('mesaj-log', this); toggleSidebar()"><i class="fas fa-search"></i> Sistem Mesaj Denetimi</li>
-        <li onclick="degistirSekme('bildirimler', this); toggleSidebar()"><i class="fas fa-bell"></i> Şifre Talepleri</li>
+        <li onclick="degistirSekme('bildirimler', this); toggleSidebar()"><i class="fas fa-bell"></i> Şifre Talepleri & Duyurular</li>
     </ul>
     <div class="sidebar-footer">
         <a href="/logout"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -172,7 +172,7 @@
                                 <option value="COKTAN_SECMELI">Şıklı (Puanlı)</option>
                             </select>
                         </div>
-                        <div class="form-group"><label>Kategori:</label><input type="text" name="category" required></div>
+                        <div class="form-group"><label>Kategori:</label><input type="text" name="category" maxlength="50" required></div>
                         <div class="form-group"><label>Maks. Puan:</label><input type="number" name="maxPoints" required></div>
                     </div>
                     <div class="coklu-secim-kutusu" style="background:#fef2f2; border-color:#fca5a5;">
@@ -180,16 +180,17 @@
                         <label for="sekizinciSinif" style="color:#b91c1c;">Bu soru SADECE 8. Sınıf öğrencilerine gösterilsin.</label>
                     </div>
                     <label>Soru Metni:</label>
-                    <textarea name="content" rows="4" required></textarea>
+                    <textarea name="content" rows="4" maxlength="1000" required></textarea>
+
                     <div id="siklarAlani" class="secenekler-alani">
                         <div class="coklu-secim-kutusu">
                             <input type="checkbox" name="allowMultipleSelections" value="true" id="cokluSecim">
                             <label for="cokluSecim">Öğrenci birden fazla şık seçebilsin.</label>
                         </div>
-                        <div class="sik-satiri"><span style="font-weight:bold;">A)</span><input type="text" name="optionA_text" placeholder="A şıkkı"><input type="number" name="optionA_point" placeholder="Puan"></div>
-                        <div class="sik-satiri"><span style="font-weight:bold;">B)</span><input type="text" name="optionB_text" placeholder="B şıkkı"><input type="number" name="optionB_point" placeholder="Puan"></div>
-                        <div class="sik-satiri"><span style="font-weight:bold;">C)</span><input type="text" name="optionC_text" placeholder="C şıkkı"><input type="number" name="optionC_point" placeholder="Puan"></div>
-                        <div class="sik-satiri"><span style="font-weight:bold;">D)</span><input type="text" name="optionD_text" placeholder="D şıkkı"><input type="number" name="optionD_point" placeholder="Puan"></div>
+                        <div class="sik-satiri"><span style="font-weight:bold;">A)</span><input type="text" name="optionA_text" maxlength="200" placeholder="A şıkkı"><input type="number" name="optionA_point" placeholder="Puan"></div>
+                        <div class="sik-satiri"><span style="font-weight:bold;">B)</span><input type="text" name="optionB_text" maxlength="200" placeholder="B şıkkı"><input type="number" name="optionB_point" placeholder="Puan"></div>
+                        <div class="sik-satiri"><span style="font-weight:bold;">C)</span><input type="text" name="optionC_text" maxlength="200" placeholder="C şıkkı"><input type="number" name="optionC_point" placeholder="Puan"></div>
+                        <div class="sik-satiri"><span style="font-weight:bold;">D)</span><input type="text" name="optionD_text" maxlength="200" placeholder="D şıkkı"><input type="number" name="optionD_point" placeholder="Puan"></div>
                     </div>
                     <button type="submit">Soruyu Veritabanına Kaydet</button>
                 </form>
@@ -206,15 +207,17 @@
                                 <option value="1">1. Hafta</option><option value="2">2. Hafta</option><option value="3">3. Hafta</option><option value="4">4. Hafta</option>
                             </select>
                         </div>
-                        <div class="form-group"><label>Kategori:</label><input type="text" name="category" required></div>
-                        <div class="form-group"><label>Görev Puanı:</label><input type="number" name="maxPoints" required></div>
+                        <div class="form-group"><label>Kategori:</label><input type="text" name="category" maxlength="50" required></div>
+                        <!-- YENİ: Kaç Günlük Vazife Parametresi Eklendi -->
+                        <div class="form-group"><label>Kaç Günlük Vazife?</label><input type="number" name="targetDays" value="7" min="1" max="30" required></div>
+                        <div class="form-group"><label>Görev Puanı (Günlük):</label><input type="number" name="maxPoints" required></div>
                     </div>
                     <div class="coklu-secim-kutusu" style="background:#fef2f2; border-color:#fca5a5; margin-bottom:15px;">
                         <input type="checkbox" name="isEighthGradeOnly" value="true" id="sekizinciSinifVazife">
                         <label for="sekizinciSinifVazife" style="color:#b91c1c;">Sadece 8. Sınıflar</label>
                     </div>
                     <label>Vazife Detayı:</label>
-                    <textarea name="content" rows="4" required></textarea>
+                    <textarea name="content" rows="4" maxlength="1000" required></textarea>
                     <button type="submit" class="btn-warning">Vazifeyi Yayınla</button>
                 </form>
             </div>
@@ -252,7 +255,7 @@
 
     <section id="cevaplar" class="content-section">
         <div class="card" style="border-top: 4px solid #10b981;">
-            <div class="card-header"><i class="fas fa-robot"></i> Öğrenci Cevapları</div>
+            <div class="card-header"><i class="fas fa-robot"></i> Öğrenci Cevapları (Sayfa: <span th:text="${ansPage + 1}"></span>)</div>
             <div class="table-responsive">
                 <table class="data-table">
                     <tr><th>Öğrenci Adı</th><th style="width: 25%;">Soru / Vazife</th><th style="width: 25%;">Cevabı</th><th>Yapay Zeka Notu</th><th>Mentör Puanı</th></tr>
@@ -264,6 +267,11 @@
                         <td><span th:if="${ans.mentorScore != null}" class="badge badge-mentor" th:text="${ans.mentorScore + ' / 100'}"></span></td>
                     </tr>
                 </table>
+            </div>
+
+            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
+                <a th:if="${ansPage > 0}" th:href="@{/admin(ansPage=${ansPage - 1}, msgPage=${msgPage})}" style="background-color: #3b82f6; color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600;"><i class="fas fa-chevron-left"></i> Önceki Sayfa</a>
+                <a th:if="${hasNextAns}" th:href="@{/admin(ansPage=${ansPage + 1}, msgPage=${msgPage})}" style="background-color: #3b82f6; color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600;">Sonraki Sayfa <i class="fas fa-chevron-right"></i></a>
             </div>
         </div>
     </section>
@@ -285,7 +293,6 @@
         </div>
     </section>
 
-    <!-- KULLANICILAR (EKSTRA DETAYLI YENİ GÖRÜNÜM) -->
     <section id="kullanicilar" class="content-section">
         <div class="card" style="border-top: 4px solid #f59e0b; margin-bottom: 25px;">
             <div class="card-header"><i class="fas fa-user-clock"></i> Onay Bekleyen Mentörler</div>
@@ -321,13 +328,10 @@
                         <th>İşlemler (Şifre & Analiz & Sil)</th>
                     </tr>
                     <tr th:each="user : ${users}" th:if="${user.approved}">
-                        <!-- İsim ve Kullanıcı Adı -->
                         <td>
                             <strong th:text="${user.fullName}"></strong><br>
                             <span style="font-size:12px; color:#64748b;" th:text="'@' + ${user.username}"></span>
                         </td>
-
-                        <!-- Rol ve Cinsiyet -->
                         <td>
                             <span th:if="${user.role == 'ADMIN'}" class="badge badge-admin">Yönetici</span>
                             <span th:if="${user.role == 'MENTOR'}" class="badge badge-mentor">Mentör</span>
@@ -335,8 +339,6 @@
                             <br>
                             <span style="font-size:12px; margin-top:5px; display:inline-block; font-weight:600; color:#475569;" th:text="${user.gender != null ? user.gender : '-'}"></span>
                         </td>
-
-                        <!-- İletişim Bilgileri (Kişisel Tel + Veli Tel) -->
                         <td style="font-size:13px; color:#334155;">
                             <div th:if="${user.personalPhone != null and user.personalPhone != ''}">
                                 <i class="fas fa-mobile-alt" style="color:#64748b; margin-right:3px;"></i> <span th:text="${user.personalPhone}"></span>
@@ -346,39 +348,28 @@
                             </div>
                             <div th:if="${(user.personalPhone == null or user.personalPhone == '') and (user.parentPhone == null or user.parentPhone == '')}" style="color:#94a3b8; font-style:italic;">Belirtilmemiş</div>
                         </td>
-
-                        <!-- Eğitim (Okul, Sınıf) / Bölge (Şehir, İlçe) -->
                         <td style="font-size:13px; color:#334155;">
-                            <!-- Öğrenciyse -->
                             <div th:if="${user.role == 'STUDENT'}">
                                 <i class="fas fa-school" style="color:#64748b; margin-right:3px;"></i> <strong th:text="${user.school}"></strong><br>
                                 <i class="fas fa-book-reader" style="color:#64748b; margin-right:3px;"></i> <span th:text="${user.gradeClass != null ? user.gradeClass + '. Sınıf' : ''}"></span><br>
                                 <i class="fas fa-map-marker-alt" style="color:#64748b; margin-right:3px;"></i> <span th:text="${user.city != null ? user.city : ''} + (${user.region != null ? ' / ' + user.region : ''})"></span>
                             </div>
-                            <!-- Mentörse -->
                             <div th:if="${user.role == 'MENTOR'}">
                                 <i class="fas fa-map-marker-alt" style="color:#64748b; margin-right:3px;"></i> <span th:text="${user.city != null ? user.city : ''} + (${user.region != null ? ' / ' + user.region : ''})"></span>
                             </div>
                             <div th:if="${user.role == 'ADMIN'}" style="color:#94a3b8; font-style:italic;">Sistem Yöneticisi</div>
                         </td>
-
-                        <!-- Butonlar -->
                         <td>
                             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                <!-- Şifre Yenileme -->
                                 <form th:unless="${user.role == 'ADMIN'}" action="/admin/reset-password" method="POST" style="display: flex; gap: 5px; margin: 0;">
                                     <input type="hidden" name="userId" th:value="${user.id}">
                                     <input type="text" name="newPassword" placeholder="Yeni Şifre" required style="padding: 4px 8px; font-size: 12px; width: 110px;">
                                     <button type="submit" style="padding: 4px 8px; font-size: 12px; background-color: #f59e0b;"><i class="fas fa-key"></i> Yenile</button>
                                 </form>
-
-                                <!-- AI Karne -->
                                 <form th:if="${user.role == 'STUDENT'}" action="/admin/ai-report" method="POST" style="margin: 0;">
                                     <input type="hidden" name="studentId" th:value="${user.id}">
                                     <button type="submit" style="padding: 4px 8px; font-size: 12px; background-color: #8b5cf6; border: none; border-radius: 6px; color: white; cursor: pointer;"><i class="fas fa-brain"></i> AI Karne</button>
                                 </form>
-
-                                <!-- Kullanıcı Silme Butonu -->
                                 <form th:unless="${user.role == 'ADMIN'}" action="/admin/delete-user" method="POST" style="margin: 0;">
                                     <input type="hidden" name="userId" th:value="${user.id}">
                                     <button type="submit" style="padding: 4px 8px; font-size: 12px; background-color: #ef4444; border: none; border-radius: 6px; color: white; cursor: pointer;" onclick="return confirm('Bu kullanıcıyı ve ona ait TÜM kayıtları (mesajlar, cevaplar) silmek istediğinize emin misiniz? Bu işlem geri alınamaz!');">
@@ -420,7 +411,7 @@
 
     <section id="mesaj-log" class="content-section">
         <div class="card" style="border-top: 4px solid #8b5cf6;">
-            <div class="card-header"><i class="fas fa-user-secret"></i> Platform İçi İletişim Logları</div>
+            <div class="card-header"><i class="fas fa-user-secret"></i> Platform İçi İletişim Logları (Sayfa: <span th:text="${msgPage + 1}"></span>)</div>
             <div class="table-responsive">
                 <table class="data-table">
                     <tr><th>Tarih</th><th>Kimden</th><th>Kime</th><th style="width: 40%;">Mesaj</th></tr>
@@ -432,18 +423,42 @@
                     </tr>
                 </table>
             </div>
+
+            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
+                <a th:if="${msgPage > 0}" th:href="@{/admin(ansPage=${ansPage}, msgPage=${msgPage - 1})}" style="background-color: #8b5cf6; color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600;"><i class="fas fa-chevron-left"></i> Önceki Sayfa</a>
+                <a th:if="${hasNextMsg}" th:href="@{/admin(ansPage=${ansPage}, msgPage=${msgPage + 1})}" style="background-color: #8b5cf6; color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600;">Sonraki Sayfa <i class="fas fa-chevron-right"></i></a>
+            </div>
         </div>
     </section>
 
     <section id="bildirimler" class="content-section">
-        <div class="card" style="border-top: 4px solid #ef4444;">
-            <div class="card-header"><i class="fas fa-bell"></i> Şifre Talepleri & Duyurular</div>
+        <div class="card" style="border-top: 4px solid #ef4444; margin-bottom: 25px;">
+            <div class="card-header"><i class="fas fa-bell"></i> Yeni Bildirimler (Son 24 Saat)</div>
             <div class="table-responsive">
                 <table class="data-table">
                     <tr><th>Tarih</th><th>Mesaj</th></tr>
                     <tr th:each="notif : ${notifications}">
                         <td th:text="${#temporals.format(notif.createdAt, 'dd.MM.yyyy HH:mm')}"></td>
-                        <td th:text="${notif.message}" style="font-weight:500;"></td>
+                        <td th:text="${notif.message}" style="font-weight:600; color:#0f172a;"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(notifications)}">
+                        <td colspan="2" style="text-align:center; color:#94a3b8;">Son 24 saat içinde yeni bildirim yok.</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card" style="border-top: 4px solid #94a3b8;">
+            <div class="card-header"><i class="fas fa-history"></i> Bildirim Geçmişi</div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <tr><th>Tarih</th><th>Mesaj</th></tr>
+                    <tr th:each="notif : ${historyNotifications}">
+                        <td th:text="${#temporals.format(notif.createdAt, 'dd.MM.yyyy HH:mm')}"></td>
+                        <td th:text="${notif.message}" style="color:#475569;"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(historyNotifications)}">
+                        <td colspan="2" style="text-align:center; color:#94a3b8;">Geçmiş bildirim bulunmuyor.</td>
                     </tr>
                 </table>
             </div>

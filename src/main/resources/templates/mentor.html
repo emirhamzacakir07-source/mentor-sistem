@@ -150,7 +150,7 @@
         </div>
     </section>
 
-    <!-- CEVAPLAR (PUAN KUTUSU KALDIRILDI) -->
+    <!-- CEVAPLAR -->
     <section id="degerlendirme" class="content-section">
         <div class="card" style="border-top: 4px solid #3b82f6;">
             <div class="card-header">
@@ -187,10 +187,10 @@
                     <span class="badge badge-ai"><i class="fas fa-robot"></i> Yapay Zeka Notu: <span th:text="${ans.aiNote}">Analiz</span></span>
                 </div>
 
-                <!-- MENTÖR SADECE GERİ BİLDİRİM YAZABİLİR -->
+                <!-- MENTÖR GERİ BİLDİRİMİ VE GÜVENLİK SINIRI -->
                 <form th:action="@{/mentor/submit-feedback}" method="POST" style="background: #f8fafc; padding: 15px; border-radius: 6px; display: flex; flex-direction: row; gap: 10px;">
                     <input type="hidden" name="answerId" th:value="${ans.id}">
-                    <input type="text" name="mentorFeedback" placeholder="Öğrenciye iletilecek geri bildirim mesajınız (İsteğe bağlı)..." required style="flex:1;">
+                    <input type="text" name="mentorFeedback" maxlength="1500" placeholder="Öğrenciye iletilecek geri bildirim mesajınız (İsteğe bağlı)..." required style="flex:1;">
                     <button type="submit" style="background: #3b82f6; white-space: nowrap;"><i class="fas fa-paper-plane"></i> Gönder</button>
                 </form>
             </div>
@@ -217,7 +217,8 @@
                     <option value="">-- Öğrenci Seç --</option>
                     <option th:each="std : ${myStudents}" th:value="${std.id}" th:text="${std.fullName}"></option>
                 </select>
-                <input type="text" name="content" placeholder="Mesajınızı yazın..." required style="width: 55%;">
+                <!-- GÜVENLİK SINIRI -->
+                <input type="text" name="content" maxlength="1000" placeholder="Mesajınızı yazın..." required style="width: 55%;">
                 <button type="submit" style="background-color: #8b5cf6; width: 15%;"><i class="fas fa-paper-plane"></i></button>
             </form>
         </div>
@@ -229,7 +230,8 @@
             <div class="card" style="border-top: 4px solid #f59e0b; margin-bottom: 0;">
                 <div class="card-header"><div><i class="fas fa-bullhorn"></i> Sınıfıma Duyuru Yap</div></div>
                 <form th:action="@{/mentor/send-announcement}" method="POST">
-                    <textarea name="message" rows="4" placeholder="Duyurunuzu buraya yazın..." required></textarea>
+                    <!-- GÜVENLİK SINIRI -->
+                    <textarea name="message" rows="4" maxlength="1000" placeholder="Duyurunuzu buraya yazın..." required></textarea>
                     <button type="submit" style="background-color: #f59e0b;"><i class="fas fa-broadcast-tower"></i> Yayınla</button>
                 </form>
             </div>
@@ -280,7 +282,7 @@
     var errorMsg = /*[[${error}]]*/ null;
     if (successMessage) { Swal.fire({ icon: 'success', title: 'Başarılı!', text: successMessage, confirmButtonColor: '#10b981', timer: 3000 }); }
 
-    // YENİ: Yapay Zeka Karne metnindeki \n kısımlarını alt satıra geçirecek HTML kodu
+    // Yapay Zeka Karne metnindeki \n kısımlarını alt satıra geçirecek HTML kodu
     if (aiReportMessage) {
         Swal.fire({
             icon: 'info',
