@@ -1,5 +1,7 @@
 package com.example.mentor;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,28 @@ public class AppController {
     @Autowired private MessageRepository messageRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
+    // --- YENİ: ÖLÜMSÜZ OTURUM (SİSTEM ÇÖKSE BİLE ATILMAYI ENGELLER) ---
+    @ModelAttribute
+    public void restoreSession(HttpServletRequest request, HttpSession session) {
+        if (session.getAttribute("loggedInUserId") == null) {
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie c : cookies) {
+                    if ("dgp_auth".equals(c.getName())) {
+                        try {
+                            Long userId = Long.parseLong(c.getValue());
+                            userRepository.findById(userId).ifPresent(u -> {
+                                session.setAttribute("loggedInUserId", u.getId());
+                                session.setAttribute("loggedInUserRole", u.getRole());
+                                session.setAttribute("loggedInUsername", u.getUsername());
+                            });
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+        }
+    }
+
     // --- ZAMAN KİLİDİ ---
     private boolean isSystemOpen(LocalDateTime time) {
         DayOfWeek day = time.getDayOfWeek();
@@ -45,7 +69,8 @@ public class AppController {
     public String loginPage() { return "index"; }
 
     @PostMapping("/login")
-    public String login(@RequestParam String username, @RequestParam String password, HttpSession session, RedirectAttributes redirectAttributes) {
+    public String login(@RequestParam String username, @RequestParam String password,
+                        HttpServletResponse response, HttpSession session, RedirectAttributes redirectAttributes) {
         username = username.trim();
         password = password.trim();
 
@@ -57,8 +82,14 @@ public class AppController {
             }
 
             user.setLastLoginDate(LocalDateTime.now());
-            user.setInactiveWarningSent(false); // Radar sıfırlanır
+            user.setInactiveWarningSent(false);
             userRepository.save(user);
+
+            // KALICI ÇEREZ (30 GÜN)
+            Cookie authCookie = new Cookie("dgp_auth", user.getId().toString());
+            authCookie.setMaxAge(60 * 60 * 24 * 30);
+            authCookie.setPath("/");
+            response.addCookie(authCookie);
 
             session.setAttribute("loggedInUserId", user.getId());
             session.setAttribute("loggedInUserRole", user.getRole());
@@ -75,7 +106,8 @@ public class AppController {
     public String mentorLoginPage() { return "mentor-login"; }
 
     @PostMapping("/mentor-login")
-    public String processMentorLogin(@RequestParam String username, @RequestParam String password, HttpSession session, RedirectAttributes redirectAttributes) {
+    public String processMentorLogin(@RequestParam String username, @RequestParam String password,
+                                     HttpServletResponse response, HttpSession session, RedirectAttributes redirectAttributes) {
         username = username.trim();
         password = password.trim();
 
@@ -86,8 +118,14 @@ public class AppController {
                 return "redirect:/mentor-login";
             }
             user.setLastLoginDate(LocalDateTime.now());
-            user.setInactiveWarningSent(false); // Radar sıfırlanır
+            user.setInactiveWarningSent(false);
             userRepository.save(user);
+
+            // KALICI ÇEREZ (30 GÜN)
+            Cookie authCookie = new Cookie("dgp_auth", user.getId().toString());
+            authCookie.setMaxAge(60 * 60 * 24 * 30);
+            authCookie.setPath("/");
+            response.addCookie(authCookie);
 
             session.setAttribute("loggedInUserId", user.getId());
             session.setAttribute("loggedInUserRole", user.getRole());
@@ -158,8 +196,13 @@ public class AppController {
     }
 
     @GetMapping("/logout")
-    public String logout(HttpSession session) {
+    public String logout(HttpServletResponse response, HttpSession session) {
         session.invalidate();
+        // ÇEREZİ SİL
+        Cookie authCookie = new Cookie("dgp_auth", null);
+        authCookie.setMaxAge(0);
+        authCookie.setPath("/");
+        response.addCookie(authCookie);
         return "redirect:/";
     }
 
@@ -187,7 +230,6 @@ public class AppController {
         return "redirect:/forgot-password";
     }
 
-    // --- TEK ŞİFRE DEĞİŞTİRME ÖZELLİĞİ ---
     @PostMapping("/change-password")
     public String changePassword(@RequestParam String currentPassword,
                                  @RequestParam String newPassword,
@@ -212,7 +254,6 @@ public class AppController {
         return "MENTOR".equals(role) ? "redirect:/mentor" : "redirect:/student";
     }
 
-    // --- MESAJ GÖNDERME ---
     @PostMapping("/send-message")
     public String sendMessage(@RequestParam Long receiverId, @RequestParam String content, HttpSession session, RedirectAttributes redirectAttributes) {
         Long senderId = (Long) session.getAttribute("loggedInUserId");
@@ -253,7 +294,6 @@ public class AppController {
         return "MENTOR".equals(role) ? "redirect:/mentor" : "redirect:/student";
     }
 
-    // --- ADMİN PANELİ (RADAR, İSTATİSTİK VE SAYFALAMA) ---
     @GetMapping("/admin")
     public String adminPanel(
             @RequestParam(defaultValue = "0") int ansPage,
@@ -265,12 +305,12 @@ public class AppController {
         List<User> allUsers = new ArrayList<>();
         userRepository.findAll().forEach(allUsers::add);
 
-        // --- 3 HAFTALIK (21 GÜN) DEVAMSIZLIK RADARI (HATASIZ HALİ) ---
+        // --- DEVAMSIZLIK RADARI ---
         LocalDateTime simdi = LocalDateTime.now();
         for (User u : allUsers) {
             if ("STUDENT".equals(u.getRole())) {
                 LocalDateTime sonGiris = u.getLastLoginDate();
-                if (sonGiris == null) sonGiris = simdi; // getCreatedAt() hatasından dolayı kaldırıldı, null ise 'simdi' alınır.
+                if (sonGiris == null) sonGiris = simdi;
 
                 long gecenGun = ChronoUnit.DAYS.between(sonGiris, simdi);
 
@@ -318,7 +358,6 @@ public class AppController {
 
         List<Answer> allAnswers = answerRepository.findAll();
 
-        // LİDERLİK TABLOSU
         Map<User, Integer> studentScores = new HashMap<>();
         for(User u : allUsers) {
             if("STUDENT".equals(u.getRole())) { studentScores.put(u, 0); }
@@ -342,7 +381,7 @@ public class AppController {
         leaderboard.sort((m1, m2) -> ((Integer) m2.get("score")).compareTo((Integer) m1.get("score")));
         model.addAttribute("leaderboard", leaderboard);
 
-        // --- İSTATİSTİKLER VE ANALİZ METOTLARI ---
+        // --- İSTATİSTİKLER ---
         List<Map<String, Object>> statsList = new ArrayList<>();
         for (Question q : allQuestionsList) {
             Map<String, Object> statMap = new HashMap<>();
@@ -388,7 +427,6 @@ public class AppController {
         }
         model.addAttribute("statistics", statsList);
 
-        // SAYFALAMALAR
         Page<Answer> answerPage = answerRepository.findAll(PageRequest.of(ansPage, 50, Sort.by(Sort.Direction.DESC, "createdAt")));
         List<Map<String, Object>> adminAnswers = new ArrayList<>();
         for (Answer ans : answerPage.getContent()) {
@@ -427,7 +465,6 @@ public class AppController {
         return "admin";
     }
 
-    // --- KUSURSUZ EXCEL ÇIKTISI ---
     @GetMapping("/admin/export-users")
     public void exportUsersToCSV(HttpServletResponse response, HttpSession session) throws Exception {
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return;
@@ -547,7 +584,7 @@ public class AppController {
             @RequestParam(required = false, defaultValue = "false") boolean isTask,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String maxPoints,
-            @RequestParam(required = false) Integer targetDays, // DİNAMİK GÜN
+            @RequestParam(required = false) Integer targetDays,
             @RequestParam(required = false) String optionA_text, @RequestParam(required = false) String optionA_point,
             @RequestParam(required = false) String optionB_text, @RequestParam(required = false) String optionB_point,
             @RequestParam(required = false) String optionC_text, @RequestParam(required = false) String optionC_point,
@@ -633,7 +670,6 @@ public class AppController {
         return "redirect:/admin";
     }
 
-    // --- MENTÖR PANELİ ---
     @GetMapping("/mentor")
     public String mentorPanel(HttpSession session, Model model) {
         if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
@@ -750,7 +786,6 @@ public class AppController {
         return "redirect:/mentor";
     }
 
-    // --- ÖĞRENCİ PANELİ ---
     @GetMapping("/student")
     public String studentPanel(HttpSession session, Model model) {
         if (!"STUDENT".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
