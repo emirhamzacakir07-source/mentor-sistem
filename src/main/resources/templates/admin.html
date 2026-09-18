@@ -90,9 +90,10 @@
 <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header"><i class="fas fa-graduation-cap"></i> Dijital Gelişim Programı</div>
+    <div class="sidebar-header"><i class="fas fa-graduation-cap"></i> Dijital Gelişim Program</div>
     <ul class="sidebar-menu">
         <li class="active" onclick="degistirSekme('dashboard', this); toggleSidebar()"><i class="fas fa-chart-pie"></i> Genel Bakış</li>
+        <li onclick="degistirSekme('istatistikler', this); toggleSidebar()"><i class="fas fa-chart-bar"></i> Genel İstatistikler</li>
         <li onclick="degistirSekme('sorular', this); toggleSidebar()"><i class="fas fa-question-circle"></i> Soru & Vazife Havuzu</li>
         <li onclick="degistirSekme('cevaplar', this); toggleSidebar()"><i class="fas fa-file-signature"></i> Öğrenci Cevapları</li>
         <li onclick="degistirSekme('mentor-siniflari', this); toggleSidebar()"><i class="fas fa-chalkboard-teacher"></i> Mentör ve Sınıfları</li>
@@ -148,6 +149,93 @@
                         </tr>
                     </table>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- YENİ: İSTATİSTİKLER BÖLÜMÜ -->
+    <section id="istatistikler" class="content-section">
+        <div class="card" style="border-top: 4px solid #8b5cf6;">
+            <div class="card-header"><i class="fas fa-chart-bar"></i> Soru ve Vazife Analizleri</div>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Sistemdeki soru ve vazifelere verilen cevapların genel yüzdelik ve ortalama analizleri aşağıdadır.</p>
+
+            <div class="grid-layout">
+                <div th:each="stat : ${statistics}" class="card" style="margin-bottom:0; box-shadow:none; border:1px solid #e2e8f0; padding:20px;">
+
+                    <div style="font-size:11px; font-weight:700; color:#8b5cf6; margin-bottom:5px; text-transform:uppercase;">
+                        <span th:text="${stat.question.weekNumber != null ? stat.question.weekNumber + '. Hafta' : '1. Hafta'}"></span> -
+                        <span th:text="${stat.question.category}"></span>
+                    </div>
+
+                    <div style="font-weight:600; font-size:14px; margin-bottom:10px; color:#1e293b;" th:text="${stat.question.content}">Soru/Vazife</div>
+
+                    <div style="font-size:12px; color:#64748b; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid #f1f5f9;">
+                        Toplam Cevaplayan: <strong th:text="${stat.totalAnswers}" style="color:#0f172a;"></strong> Öğrenci
+                    </div>
+
+                    <div th:if="${stat.question.isTask}">
+                        <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:15px; border-radius:8px; text-align:center;">
+                            <div style="font-size:12px; color:#166534; font-weight:600;">Sınıfın Ortalama Yapma Süresi</div>
+                            <div style="font-size:24px; font-weight:800; color:#15803d; margin-top:5px;">
+                                <span th:text="${stat.averageDays}"></span> / <span th:text="${stat.question.targetDays != null ? stat.question.targetDays : 7}"></span> Gün
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:if="${stat.question.type == 'COKTAN_SECMELI'}">
+                        <div th:if="${stat.question.optionA != null and stat.question.optionA != ''}" style="margin-bottom:12px;">
+                            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; color:#475569; margin-bottom:4px;">
+                                <span>A) <span th:text="${stat.question.optionA}"></span></span>
+                                <span><span th:text="${stat.percentA}"></span>% (<span th:text="${stat.countA}"></span>)</span>
+                            </div>
+                            <div style="background:#e2e8f0; border-radius:6px; width:100%; height:10px; overflow:hidden;">
+                                <div th:style="'width:' + ${stat.percentA} + '%; background:#3b82f6; height:10px;'"></div>
+                            </div>
+                        </div>
+
+                        <div th:if="${stat.question.optionB != null and stat.question.optionB != ''}" style="margin-bottom:12px;">
+                            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; color:#475569; margin-bottom:4px;">
+                                <span>B) <span th:text="${stat.question.optionB}"></span></span>
+                                <span><span th:text="${stat.percentB}"></span>% (<span th:text="${stat.countB}"></span>)</span>
+                            </div>
+                            <div style="background:#e2e8f0; border-radius:6px; width:100%; height:10px; overflow:hidden;">
+                                <div th:style="'width:' + ${stat.percentB} + '%; background:#f59e0b; height:10px;'"></div>
+                            </div>
+                        </div>
+
+                        <div th:if="${stat.question.optionC != null and stat.question.optionC != ''}" style="margin-bottom:12px;">
+                            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; color:#475569; margin-bottom:4px;">
+                                <span>C) <span th:text="${stat.question.optionC}"></span></span>
+                                <span><span th:text="${stat.percentC}"></span>% (<span th:text="${stat.countC}"></span>)</span>
+                            </div>
+                            <div style="background:#e2e8f0; border-radius:6px; width:100%; height:10px; overflow:hidden;">
+                                <div th:style="'width:' + ${stat.percentC} + '%; background:#10b981; height:10px;'"></div>
+                            </div>
+                        </div>
+
+                        <div th:if="${stat.question.optionD != null and stat.question.optionD != ''}" style="margin-bottom:12px;">
+                            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; color:#475569; margin-bottom:4px;">
+                                <span>D) <span th:text="${stat.question.optionD}"></span></span>
+                                <span><span th:text="${stat.percentD}"></span>% (<span th:text="${stat.countD}"></span>)</span>
+                            </div>
+                            <div style="background:#e2e8f0; border-radius:6px; width:100%; height:10px; overflow:hidden;">
+                                <div th:style="'width:' + ${stat.percentD} + '%; background:#ef4444; height:10px;'"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:if="${!stat.question.isTask and stat.question.type == 'KLASIK'}">
+                        <div style="background:#f8fafc; border:1px dashed #cbd5e1; padding:15px; border-radius:8px; text-align:center; font-size:12px; color:#64748b;">
+                            <i class="fas fa-keyboard" style="font-size:16px; margin-bottom:5px;"></i><br>
+                            Açık uçlu metin sorusu.<br>Öğrencilerin yazdığı cevapları 'Öğrenci Cevapları' sekmesinden okuyabilirsiniz.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div th:if="${#lists.isEmpty(statistics)}" style="text-align:center; padding:30px; color:#94a3b8; font-style:italic;">
+                Sistemde henüz istatistiği hesaplanacak bir soru veya vazife bulunmuyor.
             </div>
         </div>
     </section>

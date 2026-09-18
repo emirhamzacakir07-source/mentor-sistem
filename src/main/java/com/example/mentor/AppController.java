@@ -34,6 +34,7 @@ public class AppController {
     @Autowired private MessageRepository messageRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
+    // --- ZAMAN KİLİDİ ---
     private boolean isSystemOpen(LocalDateTime time) {
         DayOfWeek day = time.getDayOfWeek();
         int hour = time.getHour();
@@ -51,7 +52,7 @@ public class AppController {
         User user = userRepository.findByUsername(username);
         if (user != null && passwordEncoder.matches(password, user.getPassword())) {
             if ("MENTOR".equals(user.getRole())) {
-                redirectAttributes.addFlashAttribute("error", "Mentör girişleri özel sayfadan yapılmaktadır. Lütfen 'Mentör Girişi' bağlantısını kullanın.");
+                redirectAttributes.addFlashAttribute("error", "Mentör girişleri özel sayfadan yapılmaktadır.");
                 return "redirect:/";
             }
 
@@ -81,7 +82,7 @@ public class AppController {
         User user = userRepository.findByUsername(username);
         if (user != null && "MENTOR".equals(user.getRole()) && passwordEncoder.matches(password, user.getPassword())) {
             if (!user.isApproved()) {
-                redirectAttributes.addFlashAttribute("error", "Hesabınız henüz onaylanmamış. Lütfen yönetici onayını bekleyiniz.");
+                redirectAttributes.addFlashAttribute("error", "Hesabınız henüz onaylanmamış.");
                 return "redirect:/mentor-login";
             }
             user.setLastLoginDate(LocalDateTime.now());
@@ -186,7 +187,7 @@ public class AppController {
         return "redirect:/forgot-password";
     }
 
-    // --- YENİ: KULLANICININ KENDİ ŞİFRESİNİ DEĞİŞTİRMESİ ---
+    // --- TEK ŞİFRE DEĞİŞTİRME ÖZELLİĞİ ---
     @PostMapping("/change-password")
     public String changePassword(@RequestParam String currentPassword,
                                  @RequestParam String newPassword,
@@ -211,6 +212,7 @@ public class AppController {
         return "MENTOR".equals(role) ? "redirect:/mentor" : "redirect:/student";
     }
 
+    // --- MESAJ GÖNDERME (1000 Karakter Korumalı) ---
     @PostMapping("/send-message")
     public String sendMessage(@RequestParam Long receiverId, @RequestParam String content, HttpSession session, RedirectAttributes redirectAttributes) {
         Long senderId = (Long) session.getAttribute("loggedInUserId");
@@ -251,6 +253,7 @@ public class AppController {
         return "MENTOR".equals(role) ? "redirect:/mentor" : "redirect:/student";
     }
 
+    // --- ADMİN PANELİ (RADAR, İSTATİSTİK VE SAYFALAMA) ---
     @GetMapping("/admin")
     public String adminPanel(
             @RequestParam(defaultValue = "0") int ansPage,
@@ -262,7 +265,7 @@ public class AppController {
         List<User> allUsers = new ArrayList<>();
         userRepository.findAll().forEach(allUsers::add);
 
-        // --- DEVAMSIZLIK RADARI (3 HAFTA) ---
+        // --- 3 HAFTALIK (21 GÜN) DEVAMSIZLIK RADARI ---
         LocalDateTime simdi = LocalDateTime.now();
         for (User u : allUsers) {
             if ("STUDENT".equals(u.getRole())) {
@@ -305,12 +308,17 @@ public class AppController {
 
         model.addAttribute("notifications", aktifBildirimler);
         model.addAttribute("historyNotifications", gecmisBildirimler);
-        model.addAttribute("questions", questionRepository.findAll());
+
+        List<Question> allQuestionsList = new ArrayList<>();
+        questionRepository.findAll().forEach(allQuestionsList::add);
+        model.addAttribute("questions", allQuestionsList);
 
         allUsers.sort(Comparator.comparing(User::getId));
         model.addAttribute("users", allUsers);
 
         List<Answer> allAnswers = answerRepository.findAll();
+
+        // LİDERLİK TABLOSU
         Map<User, Integer> studentScores = new HashMap<>();
         for(User u : allUsers) {
             if("STUDENT".equals(u.getRole())) { studentScores.put(u, 0); }
@@ -334,6 +342,53 @@ public class AppController {
         leaderboard.sort((m1, m2) -> ((Integer) m2.get("score")).compareTo((Integer) m1.get("score")));
         model.addAttribute("leaderboard", leaderboard);
 
+        // --- İSTATİSTİKLER VE ANALİZ METOTLARI ---
+        List<Map<String, Object>> statsList = new ArrayList<>();
+        for (Question q : allQuestionsList) {
+            Map<String, Object> statMap = new HashMap<>();
+            statMap.put("question", q);
+            List<Answer> qAnswers = allAnswers.stream()
+                    .filter(a -> a.getQuestionId().equals(q.getId()))
+                    .collect(Collectors.toList());
+            statMap.put("totalAnswers", qAnswers.size());
+
+            if (q.isTask()) {
+                double avg = 0;
+                if (!qAnswers.isEmpty()) {
+                    int sum = 0;
+                    int validCount = 0;
+                    for (Answer a : qAnswers) {
+                        if (a.getCompletedDays() != null) {
+                            sum += a.getCompletedDays();
+                            validCount++;
+                        }
+                    }
+                    if (validCount > 0) avg = (double) sum / validCount;
+                }
+                statMap.put("averageDays", String.format("%.1f", avg).replace(",", "."));
+            } else if ("COKTAN_SECMELI".equals(q.getType())) {
+                int countA = 0, countB = 0, countC = 0, countD = 0;
+                for (Answer a : qAnswers) {
+                    if (a.getSelectedOptions() != null) {
+                        if (a.getSelectedOptions().contains("A")) countA++;
+                        if (a.getSelectedOptions().contains("B")) countB++;
+                        if (a.getSelectedOptions().contains("C")) countC++;
+                        if (a.getSelectedOptions().contains("D")) countD++;
+                    }
+                }
+                int totalChoices = countA + countB + countC + countD;
+                int div = totalChoices == 0 ? 1 : totalChoices;
+
+                statMap.put("countA", countA); statMap.put("percentA", (countA * 100) / div);
+                statMap.put("countB", countB); statMap.put("percentB", (countB * 100) / div);
+                statMap.put("countC", countC); statMap.put("percentC", (countC * 100) / div);
+                statMap.put("countD", countD); statMap.put("percentD", (countD * 100) / div);
+            }
+            statsList.add(statMap);
+        }
+        model.addAttribute("statistics", statsList);
+
+        // SAYFALAMALAR
         Page<Answer> answerPage = answerRepository.findAll(PageRequest.of(ansPage, 50, Sort.by(Sort.Direction.DESC, "createdAt")));
         List<Map<String, Object>> adminAnswers = new ArrayList<>();
         for (Answer ans : answerPage.getContent()) {
@@ -372,6 +427,7 @@ public class AppController {
         return "admin";
     }
 
+    // --- KUSURSUZ EXCEL ÇIKTISI ---
     @GetMapping("/admin/export-users")
     public void exportUsersToCSV(HttpServletResponse response, HttpSession session) throws Exception {
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return;
@@ -491,7 +547,7 @@ public class AppController {
             @RequestParam(required = false, defaultValue = "false") boolean isTask,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String maxPoints,
-            @RequestParam(required = false) Integer targetDays,
+            @RequestParam(required = false) Integer targetDays, // DİNAMİK GÜN
             @RequestParam(required = false) String optionA_text, @RequestParam(required = false) String optionA_point,
             @RequestParam(required = false) String optionB_text, @RequestParam(required = false) String optionB_point,
             @RequestParam(required = false) String optionC_text, @RequestParam(required = false) String optionC_point,
