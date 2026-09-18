@@ -17,14 +17,13 @@ public class Question {
     private String type; // KLASIK veya COKTAN_SECMELI
 
     @Column(columnDefinition = "boolean default false")
-    private Boolean isTask; // Vazife mi, soru mu?
+    private Boolean isTask;
 
     private String category;
     private Integer maxPoints;
 
-    // YENİ EKLENEN: Vazifenin kaç günlük olduğu (Örn: 3 günlük kamp)
     @Column(name = "target_days")
-    private Integer targetDays = 7;
+    private Integer targetDays = 7; // Dinamik Vazife Günü
 
     @Column(columnDefinition = "TEXT")
     private String optionA;
@@ -52,7 +51,6 @@ public class Question {
     @Column(columnDefinition = "boolean default false")
     private Boolean isEighthGradeOnly;
 
-
     // --- GETTER VE SETTER METOTLARI ---
 
     public Long getId() { return id; }
@@ -73,7 +71,6 @@ public class Question {
     public Integer getMaxPoints() { return maxPoints; }
     public void setMaxPoints(Integer maxPoints) { this.maxPoints = maxPoints; }
 
-    // YENİ EKLENEN GETTER/SETTER
     public Integer getTargetDays() { return targetDays; }
     public void setTargetDays(Integer targetDays) { this.targetDays = targetDays; }
 

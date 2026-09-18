@@ -212,7 +212,7 @@ public class AppController {
         return "MENTOR".equals(role) ? "redirect:/mentor" : "redirect:/student";
     }
 
-    // --- MESAJ GÖNDERME (1000 Karakter Korumalı) ---
+    // --- MESAJ GÖNDERME ---
     @PostMapping("/send-message")
     public String sendMessage(@RequestParam Long receiverId, @RequestParam String content, HttpSession session, RedirectAttributes redirectAttributes) {
         Long senderId = (Long) session.getAttribute("loggedInUserId");
@@ -265,12 +265,12 @@ public class AppController {
         List<User> allUsers = new ArrayList<>();
         userRepository.findAll().forEach(allUsers::add);
 
-        // --- 3 HAFTALIK (21 GÜN) DEVAMSIZLIK RADARI ---
+        // --- 3 HAFTALIK (21 GÜN) DEVAMSIZLIK RADARI (HATASIZ HALİ) ---
         LocalDateTime simdi = LocalDateTime.now();
         for (User u : allUsers) {
             if ("STUDENT".equals(u.getRole())) {
-                LocalDateTime sonGiris = u.getLastLoginDate() != null ? u.getLastLoginDate() : u.getCreatedAt();
-                if (sonGiris == null) sonGiris = simdi;
+                LocalDateTime sonGiris = u.getLastLoginDate();
+                if (sonGiris == null) sonGiris = simdi; // getCreatedAt() hatasından dolayı kaldırıldı, null ise 'simdi' alınır.
 
                 long gecenGun = ChronoUnit.DAYS.between(sonGiris, simdi);
 
