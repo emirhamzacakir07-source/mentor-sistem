@@ -803,7 +803,7 @@ public class AppController {
         boolean isEighthGrade = student != null && student.getGradeClass() != null && student.getGradeClass().contains("8");
 
         List<Question> availableQuestions = allQuestions.stream()
-                .filter(q -> !q.isEighthGradeOnly() || isEighthGrade)
+                .filter(q -> q.isEighthGradeOnly() == isEighthGrade) // <-- SİHİRLİ DEĞİŞİKLİK BURADA
                 .collect(Collectors.toList());
 
         List<Question> tasks = availableQuestions.stream().filter(Question::isTask).collect(Collectors.toList());
