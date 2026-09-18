@@ -104,9 +104,9 @@
         <h2 style="font-size: 18px; color: #1e293b; margin-bottom: 5px;"><i class="fas fa-tasks"></i> Haftalık Vazifeleriniz</h2>
         <hr style="border: 0; border-top: 1px solid #cbd5e1; margin-bottom: 15px;">
 
-        <!-- Eğer hiç vazife yoksa Perşembe Uyarısı -->
+        <!-- CUMA GÜNÜNE ÇEVRİLDİ -->
         <div th:if="${#lists.isEmpty(tasks)}" class="sistem-kapali-uyari" style="background-color: #eff6ff; border-color: #bfdbfe; color: #1e40af;">
-            <i class="fas fa-calendar-check"></i> Şu an aktif bir vazife bulunmuyor. Yeni vazifeler Perşembe günü yüklenecektir.
+            <i class="fas fa-calendar-check"></i> Şu an aktif bir vazife bulunmuyor. Yeni vazifeler Cuma günü yüklenecektir.
         </div>
 
         <div th:each="t : ${tasks}" class="content-card task-card">
@@ -132,7 +132,6 @@
                 <form th:if="${isSystemOpen}" th:action="@{/submit-answer}" method="POST" style="margin-top: 15px;">
                     <input type="hidden" name="questionId" th:value="${t.id}">
 
-                    <!-- YENİ: THYMELEAF DÖNGÜSÜ İLE DİNAMİK GÜN SEÇİMİ -->
                     <div class="secim-satiri" style="background-color: #fef3c7; border: 1px solid #fde68a; margin-bottom: 15px; flex-direction: column; align-items: flex-start; gap: 5px;">
                         <label style="color: #92400e; font-weight: 600;">Bu vazifeyi kaç gün uyguladınız?</label>
                         <select name="completedDays" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #fcd34d;">
@@ -147,8 +146,9 @@
                     <textarea name="answerText" rows="2" maxlength="2500" placeholder="Vazife ile ilgili notlarınız (İsteğe bağlı)..."></textarea>
                     <button type="submit" style="background-color: #f59e0b;"><i class="fas fa-check"></i> Gönder</button>
                 </form>
+                <!-- CUMA GÜNÜNE ÇEVRİLDİ -->
                 <div th:unless="${isSystemOpen}" class="sistem-kapali-uyari">
-                    <i class="fas fa-lock"></i> Görev ve vazife gönderme süresi kapalıdır. Yeni vazifeler Perşembe günü yüklenecektir.
+                    <i class="fas fa-lock"></i> Görev ve vazife gönderme süresi kapalıdır. Yeni vazifeler Cuma günü yüklenecektir.
                 </div>
             </div>
         </div>
@@ -156,9 +156,9 @@
         <h2 style="font-size: 18px; color: #1e293b; margin-top: 20px; margin-bottom: 5px;"><i class="fas fa-book-open"></i> Gelişim Soruları</h2>
         <hr style="border: 0; border-top: 1px solid #cbd5e1; margin-bottom: 15px;">
 
-        <!-- Eğer hiç soru yoksa Perşembe Uyarısı -->
+        <!-- CUMA GÜNÜNE ÇEVRİLDİ -->
         <div th:if="${#lists.isEmpty(questions)}" class="sistem-kapali-uyari" style="background-color: #eff6ff; border-color: #bfdbfe; color: #1e40af;">
-            <i class="fas fa-calendar-check"></i> Şu an aktif bir soru bulunmuyor. Yeni sorular Perşembe günü yüklenecektir.
+            <i class="fas fa-calendar-check"></i> Şu an aktif bir soru bulunmuyor. Yeni sorular Cuma günü yüklenecektir.
         </div>
 
         <div th:each="q : ${questions}" class="content-card">
@@ -220,8 +220,9 @@
                               th:required="${q.type != 'COKTAN_SECMELI'}"></textarea>
                     <button type="submit"><i class="fas fa-paper-plane"></i> Gönder</button>
                 </form>
+                <!-- CUMA GÜNÜNE ÇEVRİLDİ -->
                 <div th:unless="${isSystemOpen}" class="sistem-kapali-uyari">
-                    <i class="fas fa-lock"></i> Soru cevaplama süresi kapalıdır. Yeni sorular Perşembe günü yüklenecektir.
+                    <i class="fas fa-lock"></i> Soru cevaplama süresi kapalıdır. Yeni sorular Cuma günü yüklenecektir.
                 </div>
             </div>
         </div>
@@ -248,7 +249,6 @@
                 </div>
                 <div th:if="${#lists.isEmpty(chatMessages)}" style="text-align: center; color: #94a3b8; font-size: 12px; padding: 10px;">İstediğiniz zaman mentörünüze mesaj gönderebilirsiniz.</div>
             </div>
-            <!-- Mesaj gönderme her zaman açık (zaman kilidinden bağımsız) -->
             <form th:action="@{/send-message}" method="POST">
                 <input type="hidden" name="receiverId" th:value="${mentor.id}">
                 <textarea name="content" rows="2" maxlength="1000" placeholder="Mesajınızı yazın..." required style="margin-bottom: 5px;"></textarea>
@@ -258,7 +258,6 @@
     </aside>
 </div>
 
-<!-- MOBİL İÇİN DUYURU POP-UP EKRANI -->
 <div id="modal-overlay" onclick="duyurulariMobildeKapat()"></div>
 <div id="mobil-duyuru-modal">
     <h3 style="margin-top: 0; margin-bottom: 15px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;"><i class="fas fa-bell"></i> Sistem Duyuruları</h3>
