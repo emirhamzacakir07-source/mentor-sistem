@@ -11,7 +11,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
         body { display: flex; height: 100vh; background-color: #f8fafc; color: #334155; overflow: hidden; }
 
-        /* MOBİL MENÜ İÇİN EKLENEN YENİ SINIFLAR */
         .hamburger-btn { display: none; font-size: 24px; cursor: pointer; color: #0f172a; border: none; background: transparent; padding: 0; margin-right: 15px; }
         .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 999; }
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -62,7 +61,6 @@
         .hafta-filtre-alani { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px; font-weight: normal;}
         .hafta-filtre-alani select { width: 130px; padding: 6px; font-size: 12px; }
 
-        /* MOBİL UYUM */
         @media (max-width: 992px) {
             .sidebar { position: fixed; left: -300px; top: 0; height: 100vh; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.2); }
             .sidebar.mobile-open { left: 0; }
@@ -99,9 +97,11 @@
             <h2 id="sayfaBasligi">Genel Bakış</h2>
         </div>
         <div class="mentor-profile">
+            <!-- YENİ: ŞİFRE DEĞİŞTİR BUTONU -->
+            <a href="#" onclick="sifreModalAc()" style="background-color: #f59e0b; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; margin-right: 15px;"><i class="fas fa-key"></i> Şifre Değiştir</a>
+
             <span class="d-none d-md-inline">Mentör: <span th:text="${session.loggedInUsername}"></span></span>
             <i class="fas fa-user-circle" style="font-size: 28px;"></i>
-            <!-- YENİ: Sabit Çıkış Butonu -->
             <a href="/logout" style="color: #ef4444; text-decoration: none; font-weight: 600; margin-left: 15px; border-left: 1px solid #e2e8f0; padding-left: 15px;"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
         </div>
     </header>
@@ -113,7 +113,6 @@
         </div>
     </section>
 
-    <!-- ÖĞRENCİLERİM -->
     <section id="ogrencilerim" class="content-section">
         <div class="card">
             <div class="card-header"><div><i class="fas fa-table"></i> Sınıf Listesi, İletişim ve AI Gelişim Raporları</div></div>
@@ -150,7 +149,6 @@
         </div>
     </section>
 
-    <!-- CEVAPLAR -->
     <section id="degerlendirme" class="content-section">
         <div class="card" style="border-top: 4px solid #3b82f6;">
             <div class="card-header">
@@ -187,7 +185,6 @@
                     <span class="badge badge-ai"><i class="fas fa-robot"></i> Yapay Zeka Notu: <span th:text="${ans.aiNote}">Analiz</span></span>
                 </div>
 
-                <!-- MENTÖR GERİ BİLDİRİMİ VE GÜVENLİK SINIRI -->
                 <form th:action="@{/mentor/submit-feedback}" method="POST" style="background: #f8fafc; padding: 15px; border-radius: 6px; display: flex; flex-direction: row; gap: 10px;">
                     <input type="hidden" name="answerId" th:value="${ans.id}">
                     <input type="text" name="mentorFeedback" maxlength="1500" placeholder="Öğrenciye iletilecek geri bildirim mesajınız (İsteğe bağlı)..." required style="flex:1;">
@@ -201,7 +198,6 @@
         </div>
     </section>
 
-    <!-- MESAJLAŞMA -->
     <section id="mesajlar" class="content-section">
         <div class="card" style="border-top: 4px solid #8b5cf6;">
             <div class="card-header"><div><i class="fas fa-envelope-open-text"></i> Öğrenci Mesajları</div></div>
@@ -217,20 +213,17 @@
                     <option value="">-- Öğrenci Seç --</option>
                     <option th:each="std : ${myStudents}" th:value="${std.id}" th:text="${std.fullName}"></option>
                 </select>
-                <!-- GÜVENLİK SINIRI -->
                 <input type="text" name="content" maxlength="1000" placeholder="Mesajınızı yazın..." required style="width: 55%;">
                 <button type="submit" style="background-color: #8b5cf6; width: 15%;"><i class="fas fa-paper-plane"></i></button>
             </form>
         </div>
     </section>
 
-    <!-- DUYURU VE TOPLANTI -->
     <section id="duyuru" class="content-section">
         <div class="grid-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
             <div class="card" style="border-top: 4px solid #f59e0b; margin-bottom: 0;">
                 <div class="card-header"><div><i class="fas fa-bullhorn"></i> Sınıfıma Duyuru Yap</div></div>
                 <form th:action="@{/mentor/send-announcement}" method="POST">
-                    <!-- GÜVENLİK SINIRI -->
                     <textarea name="message" rows="4" maxlength="1000" placeholder="Duyurunuzu buraya yazın..." required></textarea>
                     <button type="submit" style="background-color: #f59e0b;"><i class="fas fa-broadcast-tower"></i> Yayınla</button>
                 </form>
@@ -247,7 +240,33 @@
     </section>
 </main>
 
+<!-- ŞİFRE DEĞİŞTİRME MODALI (YENİ EKLENDİ) -->
+<div id="sifreModalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;" onclick="sifreModalKapat()"></div>
+<div id="sifreModal" style="display:none; position:fixed; top:20%; left:50%; transform:translate(-50%, 0); background:white; padding:25px; border-radius:12px; z-index:1000; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+    <h3 style="margin-top:0; font-size:18px; border-bottom:1px solid #eee; padding-bottom:10px; color:#1e293b;"><i class="fas fa-key"></i> Şifre Değiştir</h3>
+    <form action="/change-password" method="POST">
+        <label style="font-size:12px; font-weight:600; color:#64748b;">Mevcut Şifre</label>
+        <input type="password" name="currentPassword" required style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px;">
+        <label style="font-size:12px; font-weight:600; color:#64748b;">Yeni Şifre</label>
+        <input type="password" name="newPassword" required style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px;">
+        <label style="font-size:12px; font-weight:600; color:#64748b;">Yeni Şifre (Tekrar)</label>
+        <input type="password" name="newPasswordConfirm" required style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #ccc; border-radius:6px;">
+
+        <button type="submit" style="background:#10b981; color:white; width:100%; padding:10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Şifreyi Güncelle</button>
+        <button type="button" onclick="sifreModalKapat()" style="background:#ef4444; color:white; width:100%; padding:10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:10px;">İptal</button>
+    </form>
+</div>
+
 <script>
+    function sifreModalAc() {
+        document.getElementById('sifreModal').style.display = 'block';
+        document.getElementById('sifreModalOverlay').style.display = 'block';
+    }
+    function sifreModalKapat() {
+        document.getElementById('sifreModal').style.display = 'none';
+        document.getElementById('sifreModalOverlay').style.display = 'none';
+    }
+
     function toggleSidebar() {
         document.getElementById('sidebar').classList.toggle('mobile-open');
         document.querySelector('.sidebar-overlay').classList.toggle('active');
@@ -282,7 +301,6 @@
     var errorMsg = /*[[${error}]]*/ null;
     if (successMessage) { Swal.fire({ icon: 'success', title: 'Başarılı!', text: successMessage, confirmButtonColor: '#10b981', timer: 3000 }); }
 
-    // Yapay Zeka Karne metnindeki \n kısımlarını alt satıra geçirecek HTML kodu
     if (aiReportMessage) {
         Swal.fire({
             icon: 'info',

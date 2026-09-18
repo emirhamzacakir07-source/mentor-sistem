@@ -15,6 +15,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.io.PrintWriter;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -33,7 +34,6 @@ public class AppController {
     @Autowired private MessageRepository messageRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
-    // --- ZAMAN KİLİDİ: Perşembe 18:00 ile Cuma 20:00 arası TRUE döner ---
     private boolean isSystemOpen(LocalDateTime time) {
         DayOfWeek day = time.getDayOfWeek();
         int hour = time.getHour();
@@ -56,7 +56,7 @@ public class AppController {
             }
 
             user.setLastLoginDate(LocalDateTime.now());
-            user.setInactiveWarningSent(false);
+            user.setInactiveWarningSent(false); // Radar sıfırlanır
             userRepository.save(user);
 
             session.setAttribute("loggedInUserId", user.getId());
@@ -85,7 +85,7 @@ public class AppController {
                 return "redirect:/mentor-login";
             }
             user.setLastLoginDate(LocalDateTime.now());
-            user.setInactiveWarningSent(false);
+            user.setInactiveWarningSent(false); // Radar sıfırlanır
             userRepository.save(user);
 
             session.setAttribute("loggedInUserId", user.getId());
@@ -186,6 +186,31 @@ public class AppController {
         return "redirect:/forgot-password";
     }
 
+    // --- YENİ: KULLANICININ KENDİ ŞİFRESİNİ DEĞİŞTİRMESİ ---
+    @PostMapping("/change-password")
+    public String changePassword(@RequestParam String currentPassword,
+                                 @RequestParam String newPassword,
+                                 @RequestParam String newPasswordConfirm,
+                                 HttpSession session, RedirectAttributes redirectAttributes) {
+        Long userId = (Long) session.getAttribute("loggedInUserId");
+        String role = (String) session.getAttribute("loggedInUserRole");
+        if (userId == null) return "redirect:/";
+
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            if (!passwordEncoder.matches(currentPassword.trim(), user.getPassword())) {
+                redirectAttributes.addFlashAttribute("error", "Mevcut şifrenizi yanlış girdiniz.");
+            } else if (!newPassword.trim().equals(newPasswordConfirm.trim())) {
+                redirectAttributes.addFlashAttribute("error", "Yeni şifreler birbiriyle uyuşmuyor.");
+            } else {
+                user.setPassword(passwordEncoder.encode(newPassword.trim()));
+                userRepository.save(user);
+                redirectAttributes.addFlashAttribute("successMessage", "Şifreniz başarıyla güncellendi!");
+            }
+        }
+        return "MENTOR".equals(role) ? "redirect:/mentor" : "redirect:/student";
+    }
+
     @PostMapping("/send-message")
     public String sendMessage(@RequestParam Long receiverId, @RequestParam String content, HttpSession session, RedirectAttributes redirectAttributes) {
         Long senderId = (Long) session.getAttribute("loggedInUserId");
@@ -234,6 +259,35 @@ public class AppController {
 
         if (!"ADMIN".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
 
+        List<User> allUsers = new ArrayList<>();
+        userRepository.findAll().forEach(allUsers::add);
+
+        // --- DEVAMSIZLIK RADARI (3 HAFTA) ---
+        LocalDateTime simdi = LocalDateTime.now();
+        for (User u : allUsers) {
+            if ("STUDENT".equals(u.getRole())) {
+                LocalDateTime sonGiris = u.getLastLoginDate() != null ? u.getLastLoginDate() : u.getCreatedAt();
+                if (sonGiris == null) sonGiris = simdi;
+
+                long gecenGun = ChronoUnit.DAYS.between(sonGiris, simdi);
+
+                if (gecenGun >= 21 && !u.isInactiveWarningSent()) {
+                    String mentorAdi = "Atanmamış";
+                    if (u.getAssignedMentorId() != null) {
+                        User m = userRepository.findById(u.getAssignedMentorId()).orElse(null);
+                        if (m != null) mentorAdi = m.getFullName();
+                    }
+                    Notification n = new Notification();
+                    n.setMessage("🚨 DEVAMSIZLIK RADARI: Öğrenci " + u.getFullName() + " tam 3 haftadır (21 gün) sisteme hiç giriş yapmadı! (Mentörü: " + mentorAdi + ")");
+                    n.setCreatedAt(simdi);
+                    notificationRepository.save(n);
+
+                    u.setInactiveWarningSent(true);
+                    userRepository.save(u);
+                }
+            }
+        }
+
         List<Notification> allNotifs = new ArrayList<>();
         notificationRepository.findAll().forEach(allNotifs::add);
 
@@ -253,8 +307,6 @@ public class AppController {
         model.addAttribute("historyNotifications", gecmisBildirimler);
         model.addAttribute("questions", questionRepository.findAll());
 
-        List<User> allUsers = new ArrayList<>();
-        userRepository.findAll().forEach(allUsers::add);
         allUsers.sort(Comparator.comparing(User::getId));
         model.addAttribute("users", allUsers);
 
@@ -439,7 +491,7 @@ public class AppController {
             @RequestParam(required = false, defaultValue = "false") boolean isTask,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String maxPoints,
-            @RequestParam(required = false) Integer targetDays, // YENİ EKLENEN
+            @RequestParam(required = false) Integer targetDays,
             @RequestParam(required = false) String optionA_text, @RequestParam(required = false) String optionA_point,
             @RequestParam(required = false) String optionB_text, @RequestParam(required = false) String optionB_point,
             @RequestParam(required = false) String optionC_text, @RequestParam(required = false) String optionC_point,
@@ -457,7 +509,6 @@ public class AppController {
         q.setWeekNumber(weekNumber);
         q.setEighthGradeOnly(isEighthGradeOnly);
 
-        // YENİ EKLENEN
         q.setTargetDays(targetDays != null ? targetDays : 7);
 
         if (q.getId() == null || q.getCreatedAt() == null) { q.setCreatedAt(LocalDateTime.now()); }
@@ -615,7 +666,7 @@ public class AppController {
 
     @PostMapping("/mentor/ai-report")
     public String generateAiReport(@RequestParam Long studentId, HttpSession session, RedirectAttributes redirectAttributes) {
-        if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/";
+        if (!"MENTOR".equals(session.getAttribute("loggedInUserRole"))) return "redirect:/mentor";
         Long mentorId = (Long) session.getAttribute("loggedInUserId");
 
         User student = userRepository.findById(studentId).orElse(null);

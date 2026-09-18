@@ -13,7 +13,7 @@
 
         .topbar { background: #ffffff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
         .topbar h2 { font-size: 20px; color: #0f172a; }
-        .topbar-right { display: flex; align-items: center; gap: 20px; }
+        .topbar-right { display: flex; align-items: center; gap: 15px; }
         .logout-btn { color: #ef4444; text-decoration: none; font-weight: 600; }
 
         .mobil-bildirim-zili { display: none; position: relative; cursor: pointer; font-size: 22px; color: #3b82f6; }
@@ -56,6 +56,8 @@
             .container { grid-template-columns: 1fr; padding: 15px; gap: 15px; }
             .mobil-bildirim-zili { display: inline-block !important; }
             .desktop-duyuru { display: none !important; }
+            .topbar-right { gap: 10px; }
+            .btn-sifre { font-size: 11px; padding: 6px 10px; }
         }
 
         #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
@@ -70,6 +72,9 @@
 <header class="topbar">
     <h2><i class="fas fa-graduation-cap"></i> Dijital Gelişim Programı</h2>
     <div class="topbar-right">
+        <!-- YENİ: ŞİFRE DEĞİŞTİR BUTONU -->
+        <a href="#" onclick="sifreModalAc()" class="btn-sifre" style="background-color: #f59e0b; color: white; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px;"><i class="fas fa-key"></i> Şifre Değiştir</a>
+
         <div class="mobil-bildirim-zili" onclick="duyurulariMobildeAc()">
             <i class="fas fa-bell"></i>
             <span class="bildirim-rozeti" id="zil-rozeti" th:text="${#lists.size(notifications)}">0</span>
@@ -104,7 +109,6 @@
         <h2 style="font-size: 18px; color: #1e293b; margin-bottom: 5px;"><i class="fas fa-tasks"></i> Haftalık Vazifeleriniz</h2>
         <hr style="border: 0; border-top: 1px solid #cbd5e1; margin-bottom: 15px;">
 
-        <!-- CUMA GÜNÜNE ÇEVRİLDİ -->
         <div th:if="${#lists.isEmpty(tasks)}" class="sistem-kapali-uyari" style="background-color: #eff6ff; border-color: #bfdbfe; color: #1e40af;">
             <i class="fas fa-calendar-check"></i> Şu an aktif bir vazife bulunmuyor. Yeni vazifeler Cuma günü yüklenecektir.
         </div>
@@ -146,7 +150,6 @@
                     <textarea name="answerText" rows="2" maxlength="2500" placeholder="Vazife ile ilgili notlarınız (İsteğe bağlı)..."></textarea>
                     <button type="submit" style="background-color: #f59e0b;"><i class="fas fa-check"></i> Gönder</button>
                 </form>
-                <!-- CUMA GÜNÜNE ÇEVRİLDİ -->
                 <div th:unless="${isSystemOpen}" class="sistem-kapali-uyari">
                     <i class="fas fa-lock"></i> Görev ve vazife gönderme süresi kapalıdır. Yeni vazifeler Cuma günü yüklenecektir.
                 </div>
@@ -156,7 +159,6 @@
         <h2 style="font-size: 18px; color: #1e293b; margin-top: 20px; margin-bottom: 5px;"><i class="fas fa-book-open"></i> Gelişim Soruları</h2>
         <hr style="border: 0; border-top: 1px solid #cbd5e1; margin-bottom: 15px;">
 
-        <!-- CUMA GÜNÜNE ÇEVRİLDİ -->
         <div th:if="${#lists.isEmpty(questions)}" class="sistem-kapali-uyari" style="background-color: #eff6ff; border-color: #bfdbfe; color: #1e40af;">
             <i class="fas fa-calendar-check"></i> Şu an aktif bir soru bulunmuyor. Yeni sorular Cuma günü yüklenecektir.
         </div>
@@ -220,7 +222,6 @@
                               th:required="${q.type != 'COKTAN_SECMELI'}"></textarea>
                     <button type="submit"><i class="fas fa-paper-plane"></i> Gönder</button>
                 </form>
-                <!-- CUMA GÜNÜNE ÇEVRİLDİ -->
                 <div th:unless="${isSystemOpen}" class="sistem-kapali-uyari">
                     <i class="fas fa-lock"></i> Soru cevaplama süresi kapalıdır. Yeni sorular Cuma günü yüklenecektir.
                 </div>
@@ -258,6 +259,24 @@
     </aside>
 </div>
 
+<!-- ŞİFRE DEĞİŞTİRME MODALI (YENİ EKLENDİ) -->
+<div id="sifreModalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;" onclick="sifreModalKapat()"></div>
+<div id="sifreModal" style="display:none; position:fixed; top:20%; left:50%; transform:translate(-50%, 0); background:white; padding:25px; border-radius:12px; z-index:1000; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+    <h3 style="margin-top:0; font-size:18px; border-bottom:1px solid #eee; padding-bottom:10px; color:#1e293b;"><i class="fas fa-key"></i> Şifre Değiştir</h3>
+    <form action="/change-password" method="POST">
+        <label style="font-size:12px; font-weight:600; color:#64748b;">Mevcut Şifre</label>
+        <input type="password" name="currentPassword" required style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px;">
+        <label style="font-size:12px; font-weight:600; color:#64748b;">Yeni Şifre</label>
+        <input type="password" name="newPassword" required style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px;">
+        <label style="font-size:12px; font-weight:600; color:#64748b;">Yeni Şifre (Tekrar)</label>
+        <input type="password" name="newPasswordConfirm" required style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #ccc; border-radius:6px;">
+
+        <button type="submit" style="background:#3b82f6; color:white; width:100%; padding:10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">Şifreyi Güncelle</button>
+        <button type="button" onclick="sifreModalKapat()" style="background:#ef4444; color:white; width:100%; padding:10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:10px;">İptal</button>
+    </form>
+</div>
+
+<!-- MOBİL DUYURU MODALI -->
 <div id="modal-overlay" onclick="duyurulariMobildeKapat()"></div>
 <div id="mobil-duyuru-modal">
     <h3 style="margin-top: 0; margin-bottom: 15px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;"><i class="fas fa-bell"></i> Sistem Duyuruları</h3>
@@ -272,6 +291,16 @@
 </div>
 
 <script>
+    // ŞİFRE MODAL SCRİPTLERİ
+    function sifreModalAc() {
+        document.getElementById('sifreModal').style.display = 'block';
+        document.getElementById('sifreModalOverlay').style.display = 'block';
+    }
+    function sifreModalKapat() {
+        document.getElementById('sifreModal').style.display = 'none';
+        document.getElementById('sifreModalOverlay').style.display = 'none';
+    }
+
     window.onload = function() {
         let rozet = document.getElementById("zil-rozeti");
         if (rozet) {
