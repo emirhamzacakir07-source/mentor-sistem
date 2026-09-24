@@ -174,7 +174,12 @@
                     <strong>Soru/Vazife Metni:</strong> <span th:text="${ans.questionContent}"></span>
                 </div>
 
+                <!-- YENİ: ŞIKLARI GÖSTEREN KISIM -->
                 <div class="answer-box">
+                    <div th:if="${ans.selectedOptions != null and ans.selectedOptions != ''}" style="margin-bottom: 8px;">
+                        <span style="color: #4f46e5; font-weight: bold;"><i class="fas fa-check-square"></i> İşaretlenen Şık(lar):</span>
+                        <span th:text="${ans.selectedOptions}" style="font-weight: bold; background: #e0e7ff; padding: 2px 6px; border-radius: 4px;"></span>
+                    </div>
                     <strong>Öğrencinin Ek Notu / Cevabı:</strong> <br>
                     <span th:text="${ans.answerText != null and ans.answerText != '' ? ans.answerText : 'Öğrenci sadece soruyu çözdü, ek not bırakmadı.'}"></span>
                 </div>

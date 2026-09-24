@@ -437,6 +437,7 @@ public class AppController {
             Question q = questionRepository.findById(ans.getQuestionId()).orElse(null);
             map.put("questionContent", q != null ? q.getContent() : "Silinmiş Soru");
             map.put("answerText", ans.getAnswerText());
+            map.put("selectedOptions", ans.getSelectedOptions()); // YENİ: ŞIKLARI ADMİNE GÖNDER
             map.put("aiNote", ans.getAiNote());
             map.put("mentorScore", ans.getMentorScore());
             map.put("isMonthlyReset", ans.isMonthlyReset());
@@ -690,6 +691,7 @@ public class AppController {
                 map.put("studentId", student.getId());
                 map.put("studentName", student.getFullName());
                 map.put("answerText", ans.getAnswerText());
+                map.put("selectedOptions", ans.getSelectedOptions()); // YENİ: ŞIKLARI MENTÖRE GÖNDER
                 map.put("aiNote", ans.getAiNote());
                 map.put("mentorFeedback", ans.getMentorFeedback());
                 Question q = questionRepository.findById(ans.getQuestionId()).orElse(null);
@@ -803,7 +805,15 @@ public class AppController {
         boolean isEighthGrade = student != null && student.getGradeClass() != null && student.getGradeClass().contains("8");
 
         List<Question> availableQuestions = allQuestions.stream()
-                .filter(q -> q.isEighthGradeOnly() == isEighthGrade) // <-- SİHİRLİ DEĞİŞİKLİK BURADA
+                .filter(q -> q.isEighthGradeOnly() == isEighthGrade)
+                .collect(Collectors.toList());
+
+        int aktifHafta = availableQuestions.stream()
+                .mapToInt(q -> q.getWeekNumber() != null ? q.getWeekNumber() : 1)
+                .max().orElse(1);
+
+        availableQuestions = availableQuestions.stream()
+                .filter(q -> (q.getWeekNumber() != null ? q.getWeekNumber() : 1) == aktifHafta)
                 .collect(Collectors.toList());
 
         List<Question> tasks = availableQuestions.stream().filter(Question::isTask).collect(Collectors.toList());
@@ -813,25 +823,13 @@ public class AppController {
         Map<Long, Answer> answerMap = new HashMap<>();
         for (Answer a : answers) { answerMap.put(a.getQuestionId(), a); }
 
-        List<Notification> allNotifs = new ArrayList<>();
-        notificationRepository.findAll().forEach(allNotifs::add);
-        List<Notification> myNotifs = new ArrayList<>();
-        if (mentor != null) {
-            String mentorName = mentor.getUsername();
-            for(Notification n : allNotifs) {
-                if(n.getMessage().contains(mentorName) || n.getMessage().contains(mentor.getFullName())) {
-                    myNotifs.add(n);
-                }
-            }
-        }
-        model.addAttribute("notifications", myNotifs);
-
         model.addAttribute("isSystemOpen", isSystemOpen(LocalDateTime.now()));
         model.addAttribute("student", student);
         model.addAttribute("mentor", mentor);
         model.addAttribute("tasks", tasks);
         model.addAttribute("questions", questions);
         model.addAttribute("answerMap", answerMap);
+        model.addAttribute("aktifHafta", aktifHafta);
 
         List<Message> myMessages = messageRepository.findBySenderIdOrReceiverIdOrderBySentAtAsc(studentId, studentId);
         model.addAttribute("chatMessages", myMessages);
